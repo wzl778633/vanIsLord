@@ -1,23 +1,50 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import LoginPage from '../views/Gate.vue'
+import MainPage from '../views/MainPage.vue'
+import MainPart from '../components/MainPart.vue'
+import ShowPart from '../components/ShowPart.vue'
+import Error from '../views/ErrorPage.vue'
+import UploadPage from '../views/UploadPage.vue'
+import DownloadPage from "@/views/DownloadPage";
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/',
-    name: 'home',
-    component: HomeView
+    path: '/404error',
+    name: 'Error',
+    component: Error,
+    meta: {
+      isLogin: false
+    }
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
+    path: '/',
+    name: 'LoginPage',
+    component: LoginPage,
+    meta: {
+      isLogin: false
+    }
+  },
+  {
+    path: '/mainpage',
+    name: 'MainPage',
+    component: MainPage,
+    children:[
+      {path : 'disk/:path+', component: MainPart,},
+      {path : 'download', component: DownloadPage,},
+      {path : 'upload', component: UploadPage,},
+      {path : 'my_picture', component: ShowPart,},
+      {path : 'my_video', component: ShowPart,},
+      {path : 'my_favorite', component: ShowPart,},
+      {path : 'my_torrent', component: ShowPart,},
+      {path : 'my_music', component: ShowPart,},
+    ],
+    meta: {
+      isLogin: true
+    },
+  },
 ]
 
 const router = new VueRouter({

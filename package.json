@@ -7,10 +7,22 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "animate.css": "^4.1.1",
+    "axios": "^0.26.1",
+    "bootstrap-icons": "^1.8.1",
     "core-js": "^3.8.3",
+    "element-ui": "^2.15.6",
+    "mux.js": "^6.0.1",
+    "overlayscrollbars-vue": "^0.2.2",
     "register-service-worker": "^1.7.2",
+    "smooth-scrollbar": "^8.7.4",
+    "spark-md5": "^3.0.2",
+    "v-contextmenu": "^2.9.0",
     "vue": "^2.6.14",
     "vue-router": "^3.5.1",
+    "vue-runtime-helpers": "^1.1.2",
+    "vue-star": "^0.0.4",
+    "vue2-perfect-scrollbar": "^1.5.5",
     "vuex": "^3.6.2"
   },
   "devDependencies": {
@@ -21,6 +33,9 @@
     "@vue/cli-service": "~5.0.0",
     "sass": "^1.32.7",
     "sass-loader": "^12.0.0",
+    "svg-sprite-loader": "^6.0.11",
+    "video.js": "^7.18.1",
+    "vue-svg-loader": "^0.16.0",
     "vue-template-compiler": "^2.6.14"
   }
 }
