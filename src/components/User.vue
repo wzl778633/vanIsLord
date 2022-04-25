@@ -1,8 +1,11 @@
 <template>
-  <div id = "userMenu">
-    <el-avatar :size="imgSize" :src="touXiangsrc" :fit = "fitMode" class = "userContent"> </el-avatar>
-      <p v-show= "!isMainCollapse" class = "userContent name">{{userName}}</p>
-    <el-button type="warning" icon="el-icon-star-off" circle @click = "changeValue"></el-button>
+
+  <div :id = "!isMainCollapse ? 'userMenu' : 'userMenuHide'">
+    <el-avatar :size="imgSize" :src="touXiangsrc" :fit = "fitMode" class = "userContent" id = "userAvatarV"> </el-avatar>
+    <transition name = "nameShow">
+      <p v-if = "!delayCollapse" id = "userContentname" @click = "sendOut">{{userName}}</p>
+    </transition>
+    <!--el-button v-show= "!isMainCollapse" type="warning" icon="el-icon-star-off" circle @click = "sendOut"></el-button-->
   </div>
 
 
@@ -11,44 +14,46 @@
 <script>
 export default {
   name: "User",
-  //props:["isMainCollapse"],
+  props:["isMainCollapse"],
   data(){
     return{
-      touXiangsrc : require("@/assets/imgs/001.jpg"),
+      touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}`,
       userName : "ZiningDadi",
       fitMode : "cover",
       imgSize : 60,
-      isMainCollapse : false,
+      delayCollapse : false,
     }
   },
   methods: {
-    changeValue(){
-      this.isMainCollapse = !this.isMainCollapse
-    },
-    errorHandler() {
-      return true
+
+    sendOut() {
+     this.$emit("openUser")
     }
   },
   created() {
     this.userName = "你好, " + this.$store.state.user_name;
   },
+
   watch:{
-   // "isMainCollapse":{
-   //   handler(val){
-   //     this.$emit("sccc",val);
-   //   }
-   // }
+   "isMainCollapse":{
+     handler(val){
+       if(val){
+         this.imgSize = 48;
+         this.delayCollapse  = true;
+       }else{
+         this.imgSize = 60;
+         setTimeout(()=>{
+           this.delayCollapse  = false;
+         },350);
+       }
+      }
+    }
   },
   mounted() {
-    if(this.isMainCollapse){
-      this.imgSize = 50;
-      let c = document.getElementById("userMenu");
-      c.style.margin = "5px 0px";
-    }else{
-      this.imgSize = 60;
-      let c = document.getElementById("userMenu");
-      c.style.margin = "5px 5px";
-    }
+    let c = document.getElementById('userAvatarV');
+    c.addEventListener('click',() => {
+      this.sendOut();
+    });
   },
 
 
@@ -57,30 +62,53 @@ export default {
 
 <style scoped>
 #userMenu{
-  box-sizing: border-box;
-  width: 95%;
-  margin: 5px 5px;
+
+  margin: 3px 3px !important;
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
+  justify-content: start;
   align-items: center;
   background-color: #444857;
   border-radius: 50px;
-  transition: all .3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+  width:214px;
+  height: max-content;
 }
+#userMenuHide{
 
+  margin: 3px 3px !important;
+  background-color: #444857;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  border-radius: 50px;
+  transition: all 0.3s ease-in-out;
+  width:58px;
+
+}
 
 .userContent{
   margin: 5px;
-  transition: all .3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
-p{
+#userContentname{
+  box-sizing: border-box;
   width: 35%;
+  height: 100%;
   color: white;
+  margin: 0px 25px;
+  opacity: 1;
+
 }
 
 
+.nameShow-enter-active{
+  transition: all 0.3s ease-in-out;
+}
+.nameShow-enter{
+  transform: translateX(-30px);
+  opacity: 0 !important;
 
+}
 
 </style>

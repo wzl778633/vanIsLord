@@ -23,6 +23,17 @@ export default {
     return false;
   }
 },
+
+    checkOldPasswordAvailable(event,inputID,errorMsgID){
+      let pattern = /^.*(?=.{6,})(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[-*/+.~!@#$%^&*(),]).*$/g;
+      if(!pattern.test(this.oldPassword)){
+        this.errorDealing(event,inputID,errorMsgID);
+        return true;
+      }else{
+        this.recover(event,inputID,errorMsgID);
+        return false;
+      }
+    },
     checkIfSame(event,inputID,errorMsgID){
       if(this.rePassword !== this.password){
         this.errorDealing(event,inputID,errorMsgID);

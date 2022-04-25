@@ -1,15 +1,15 @@
 <template>
   <div class = "mainShell" >
-    <DirPath  @dirRedirect = "decode" ></DirPath>
+    <DirPath  @dirRedirect = "decode" @reload = "reloadPass"></DirPath>
     <!--ul class = "document"-->
 
 
     <div class = "dragAble" @dragenter = "handleDropEvent"  @dragover = "handleDropOver">
     <overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 100px); box-sizing: border-box;
   padding: 20px;">
-      <div id ="ccc">
-        <DocumentList id = "dList" :itemList="items" @pass = "decode"></DocumentList>
-      </div>
+
+        <DocumentList id = "dList" :itemList="items" @pass = "decode" @reload = "reloadPass"></DocumentList>
+
 
 
     </overlay-scrollbars>
@@ -41,6 +41,9 @@ export default {
       isDrag:false,
       defaultStyle: {
         className: 'os-theme-thick-light',
+        overflowBehavior : {
+          x : "hidden",
+        },
         scrollbars: { autoHide : "leave",},
 
       }
@@ -54,6 +57,10 @@ export default {
     DocumentList,
   },
   methods:{
+
+    reloadPass(){
+      this.$emit("reload");
+    },
     destroyDragArea(){
       this.isDrag = false;
     },
@@ -97,7 +104,10 @@ export default {
             "content": arr,
           },
       ).catch((error) => {
-        this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
+        if(error.status !== 401){
+          this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
+        }
+
       });
       if(res.code == 200){
         for(let i of res.data){
@@ -122,7 +132,9 @@ export default {
             "node_id": Number(id),
           },
       ).catch((error) => {
-        this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
+            if(error.status !== 401) {
+              this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
+            }
       });
       if(res.code == 200){
         this.$store.commit("updateDirList",res.data[0]);
@@ -192,11 +204,6 @@ export default {
 }
 
 
-#ccc{
-  box-sizing: border-box;
-  width: 100%;
-  padding-bottom: 170px;
-}
 
 
 </style>

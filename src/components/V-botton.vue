@@ -1,5 +1,5 @@
 <template>
-  <div class="button-container">
+  <div class="button-container" id = "button-container">
     <button @click = "handleClick" id = "upload" :class = "vStyle">
       <i v-if="isIcon" :class="iconClass"></i>
       {{nameForButton}}

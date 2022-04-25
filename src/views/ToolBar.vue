@@ -17,12 +17,12 @@
 <script>
 import Upload from "@/components/Upload";
 import Vbotton from "@/components/V-botton";
-import Download from "@/components/Download";
+
 export default {
   name: "ToolBar",
   inject:['reload'],
   components:{
-    Download,
+
     Upload,
     Vbotton
   },

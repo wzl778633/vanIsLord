@@ -126,7 +126,23 @@ const updateModule = {
       }
     },
 
-
+    updateTotallyCompleteFailed(state, file){
+          let element = {
+            name: file.name,
+            size: '未知',
+            realSize:file.size,
+            id: file.uid,
+            status:"上传发起失败",
+            complete: 0,
+            hash:'error',
+            fileType:"question-octagon",
+            noErrorFlag: false,
+            isFinished: true,
+            isPause:false,
+            isGG:false,
+          }
+          state.uploadedFiles.unshift(element);
+    },
 
     updatePartList(state, [uid,partList]){
       for (let element of state.waitingFiles){
@@ -145,11 +161,13 @@ const updateModule = {
       }
 
     },
-
+    initialUploadedFiles(state,files){
+      state.uploadedFiles = files;
+    },
     removeRecord(state, uid){
       for (let element of state.uploadedFiles){
         if(element.id == uid){
-          state.uploadedFiles.splice(state.uploadingFiles.indexOf(element), 1);
+          state.uploadedFiles.splice(state.uploadedFiles.indexOf(element), 1);
           break;
         }
       }
@@ -228,6 +246,8 @@ export default new Vuex.Store({
     user_name:"tom",
     node_id:1,
     currentPath:"",
+    avatarBase64:"",
+
     //lastPath:"",
     currentDecodePath:[],
     rightNowDirList:   [],
@@ -255,6 +275,7 @@ export default new Vuex.Store({
     updateNodeId(state,id){
       state.node_id = id;
     },
+
    // updateLastPath(state,newPath){
     //  state.lastPath = newPath;
   //  },

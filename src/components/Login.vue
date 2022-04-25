@@ -67,7 +67,7 @@ export default {
     return{
       account: "tom",
       email:"",
-      password: "Ww123456,",
+      password: "WWww123456,./",
       passwordError:false,
       postReturnError:false,
       isLogin:true,
@@ -143,17 +143,17 @@ export default {
       if(loginData.code == "200"){
         console.log("登录成功");
         this.isLogin = false;
-        let userData = loginData.data;
+
         this.$store.commit("determineUserID",loginData.data.user_id);
         this.$store.commit("determineUserName",loginData.data.user_name);
         this.$store.commit("initial",loginData.data.content);
         let path = `/${loginData.data.user_name}`;
         this.$store.commit("updatePath","/mainpage/disk" + path);
 
-        localStorage.isLogin = "Yes";
-        localStorage.who = loginData.data.user_name;
-        localStorage.whoID = loginData.data.user_id;
-        localStorage.rootPath = "/mainpage/disk" + path;
+        localStorage.loginToken = loginData.data.token;
+        if(loginData.data.base64){
+          localStorage.avatar = loginData.data.base64;
+        }
 
         this.$router.push("/mainpage/disk" + path);
       } else {
@@ -168,7 +168,10 @@ export default {
       }
 
       }).catch((error) => {
-        this.$message.error('登录出现未知问题，请联系Van！ Code:' + error.message);
+        if(error.status !== 401) {
+          this.$message.error('登录出现未知问题，请联系Van！ Code:' + error.message);
+        }
+
       });
 
 

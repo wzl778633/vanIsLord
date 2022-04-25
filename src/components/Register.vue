@@ -188,7 +188,9 @@ export default {
 
         }
       }).catch((error) => {
-        this.$message.error('注册出现未知问题，请联系Van！ Code:' + error.message);
+        if(error.status !== 401) {
+          this.$message.error('注册出现未知问题，请联系Van！ Code:' + error.message);
+        }
       });
     }
   }

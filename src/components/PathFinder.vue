@@ -122,7 +122,6 @@ export default {
               this.isPass = true;
               this.errorPop = false;
               this.whereToGo = res.data;
-              console.log(this.whereToGo);
               this.recover(null,"pathfinderInput","pathfinderMessage");
               return true;
             }else{
@@ -133,7 +132,9 @@ export default {
             }
           }
       ).catch((error) => {
-        this.$message.error("路径检查出现未知异常，请联系Van! Code: " + error.message);
+        if(error.status !== 401) {
+          this.$message.error("路径检查出现未知异常，请联系Van! Code: " + error.message);
+        }
         return false;
       });
     }
@@ -158,5 +159,7 @@ finderContainer{
 .pathfinder-error-enter-active{
   animation: shaking .3s linear;
 }
-
+.errorMsgs{
+  margin-bottom: 10px;
+}
 </style>

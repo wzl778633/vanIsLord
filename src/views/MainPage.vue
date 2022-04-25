@@ -39,20 +39,18 @@
             <i class="bi-chat-right-dots-fill menuIcons"></i>
             <span slot="title">留言板</span>
           </el-menu-item>
-          <User class = "currentUser" @sccc = "changeC"></User>
         </el-menu>
-
       <el-main class="frame main">
           <ToolBar></ToolBar>
 
-          <router-view v-if="isRouterAlive"></router-view>
-
-
-
+          <router-view v-if="isRouterAlive" @reload = "reload" ></router-view>
 
         <!--MainPart></MainPart-->
       </el-main>
     </el-container>
+    <UserProfile :ifRemove = "isUserOpen" @closeUser = "closeUserProfile" ></UserProfile>
+    <User :isMainCollapse = "isCollapse" class = "currentUser" @openUser = "openUserProfile" ></User>
+    <v-pull-button :class = "!isCollapse ? 'mainPagePullButton' : 'mainPagePullButton hide' " :isHide = "isCollapse" @switchCollapse = "handleCollapse"></v-pull-button>
   </el-container>
 </template>
 
@@ -61,6 +59,8 @@ import MainPart from '@/components/MainPart.vue'
 import User from '@/components/User.vue'
 import DragArea from "@/components/DragArea";
 import ToolBar from "@/views/ToolBar";
+import UserProfile from "@/components/UserProfile";
+import VPullButton from "@/components/V-pullButton";
 
 export default {
 
@@ -76,7 +76,7 @@ export default {
       isRouterAlive: true,
       currentRow:null,
       isCollapse: false,
-
+      isUserOpen:false,
       routeToDisk:"/mainpage/disk/",
       routeToDiskMusic:"/mainpage/my_music",
       routeToDiskPic:"/mainpage/my_picture",
@@ -92,7 +92,15 @@ export default {
     }
   },
   methods:{
-
+    handleCollapse(){
+      this.isCollapse = !this.isCollapse;
+    },
+    openUserProfile(){
+      this.isUserOpen = true;
+    },
+    closeUserProfile(){
+      this.isUserOpen = false;
+    },
     changeC(val){
       this.isCollapse = val;
     },
@@ -105,15 +113,27 @@ export default {
     handleCurrentChange(val) {
       this.currentRow = val;
     },
+
   },
   components:{
+    VPullButton,
+    UserProfile,
     MainPart,
     User,
     ToolBar,
     DragArea,
   },
-  created() {
+  async created() {
+
     this.routeToDisk = this.routeToDisk+this.$store.state.user_name;
+    let{data:res} = await this.$http.post("/getHistory",{
+      user_id:this.$store.state.user_id,
+    });
+
+    if(res.code === 200){
+      this.$store.commit("updateState/initialUploadedFiles", res.data);
+    }
+
   }
 
 }
@@ -123,8 +143,9 @@ export default {
 #main{
   width: 100%;
   min-width: max-content;
+  position: relative;
   height: 100%;
-  min-height: 660px;
+  min-height: 700px;
   background: linear-gradient(to right,#1e1f26 25%,#252830 100%);
 
 }
@@ -169,9 +190,9 @@ export default {
 .frame.aside{
 
   border: none;
-  position: relative;
-  height: 100%;
 
+  height: 100%;
+  z-index: 1;
 }
 
 #logo{
@@ -183,6 +204,7 @@ export default {
 .currentUser{
   position: absolute;
   bottom: 0%;
+  z-index: 2;
 }
 
 .menuIcons{
@@ -196,6 +218,15 @@ export default {
   min-height: 600px;
 }
 
+.mainPagePullButton{
+  position: absolute;
+  left: 160px;
+  bottom: 20px;
+  z-index: 0;
+  transition: all 0.3s ease-in-out;
+}
+.mainPagePullButton.hide{
+  left: 4px;
 
-
+}
 </style>

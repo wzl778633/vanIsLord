@@ -1,5 +1,5 @@
 <template>
-<div class = "stage" @click = "choose" v-contextmenu:contextmenu>
+<div class = "stage" @click = "choose">
     <div class = "documentBlock" @mouseenter = "changeHeight" @mouseleave = "recover">
       <vue-star ref = "vueStar" class="favorite" animate="animated rubberBand" color="#FFD580">
         <i slot="icon" class="bi-star-fill" @click = "changeFavorite"></i>
@@ -10,6 +10,30 @@
       <img v-else :id = "'s'+item.node_id" :src="imgSrc" style="width: 140px; height: 80px; object-fit: cover" >
       <p id = "showName">{{ item.file_name }}</p>
   </div>
+  <RenameDialog @closeRename = "closeRename" :renameVisible = "renameVisible"></RenameDialog>
+  <el-dialog
+      title="移动到..."
+      :visible.sync="moveVisible"
+      :append-to-body = "true"
+      width="40%">
+    <div class = "uploadBody">
+      <div class = "uploadBlock">
+        <transition name = "tp-error">
+          <el-alert v-show="tpError"
+                    title="禁止原地tp! (你必须移动到不同的文件夹！)"
+                    type="error"
+                    show-icon :closable="false" id = "tpErrorMessage" class="errorMsgs">
+          </el-alert>
+        </transition>
+        <p class = "hint">输入或使用选择器输入你想上传的目标路径。</p>
+        <PathFinder ref = "uploadPathFinder" @pathFinderData = "getData"></PathFinder>
+      </div>
+    </div>
+    <span slot="footer" class="dialog-footer">
+    <el-button @click="moveVisible = false">取 消</el-button>
+    <el-button type="primary" @click="moveTo">移 动</el-button>
+    </span>
+  </el-dialog>
   <el-dialog
       title=""
       :visible.sync="dialogVisible"
@@ -30,7 +54,11 @@
         <span class = "info">最后修改时间： FileSize</span>
         <span class = "info">文件类型： FileSize</span>
         <div class = "infoButton">
-          <Vbotton :isWorking = "false" :clickMethod = "changeDialog" :nameForButton = "'打开'" :isIcon ="false" :vStyle = "'rounded'"></Vbotton>
+          <Vbotton :isWorking = "false"
+                   :clickMethod = "changeDialog"
+                   :nameForButton = "'打开'"
+                   :isIcon ="false"
+                   :vStyle = "'rounded'"></Vbotton>
           <Vbotton :isWorking = "false" :clickMethod = "download" :nameForButton = "'下载'" :isIcon ="false" :vStyle = "'rounded'"></Vbotton>
         </div>
       </div>
@@ -53,14 +81,7 @@
     </div>
   </el-dialog>
 
-  <v-contextmenu ref="contextmenu" theme="dark">
-    <v-contextmenu-item @click = "changeDialog"><i class = "bi-check2-circle"></i> 打开</v-contextmenu-item>
-    <v-contextmenu-item @click = "download"><i class = "bi-cloud-download"></i> 下载</v-contextmenu-item>
-    <v-contextmenu-item><i class = "bi-box-arrow-up-left"></i> 移动到...</v-contextmenu-item>
-    <v-contextmenu-item @click = "deleteProgress"><i class = "bi-trash3"></i> 删除</v-contextmenu-item>
-    <v-contextmenu-item v-if = "!this.isFav" @click = "changeFavorite"><i class = "bi-star-fill"></i> 加入收藏</v-contextmenu-item>
-    <v-contextmenu-item v-else @click = "changeFavorite"><i class = "bi-star"></i> 取消收藏</v-contextmenu-item>
-  </v-contextmenu>
+
 </div>
 
 
@@ -70,12 +91,13 @@
 
 import Vbotton from "@/components/V-botton";
 import VueStar from 'vue-star'
+import PathFinder from "@/components/PathFinder.vue"
+import RenameDialog from "@/components/RenameDialog";
+
 
 export default {
-
   name: "Document",
   props: ["item"],
-  inject:['reload'],
   data() {
     return {
       color: "",
@@ -83,15 +105,22 @@ export default {
       openDialogVisible:false,
       isNotImage:true,
       isFav: false,
+      isFolder:false,
       imgSrc:"",
       liveSrc : "",
       hash:"",
+      fullscreenLoading : false,
+      moveVisible:false,
+      renameVisible:false,
+      tpError:false,
+      moveToInput:"",
     }
   },
   created() {
     switch (this.item.content_type) {
       case "folder-fill":
         this.color = "orange";
+        this.isFolder = true;
         break;
       case "filetype-doc":
       case "filetype-docx":
@@ -152,8 +181,11 @@ export default {
   },
 
   methods: {
-    change(){
-      this.reload();
+    closeRename(){
+      this.renameVisible = false;
+    },
+    rename(){
+      this.renameVisible = true;
     },
     async changeFavorite(event){
       if(this.isFav){
@@ -162,7 +194,11 @@ export default {
               user_id:this.$store.state.user_id,
               node_id:this.item.node_id,
               is_favorites:false
-      });
+      }).catch((error) => {
+          if(error.status !== 401) {
+            this.$message.error('收藏删减出现未知问题，请联系Van！ Code:' + error.message);
+          }}
+        );
 
         if(res.code === 200){
           this.isFav = false;
@@ -196,26 +232,56 @@ export default {
         }
       }
     },
-    deleteProgress(){
+    getData(input) {
+      this.moveToInput = input;
+    },
+    async moveTo(){
+      let tmp = await this.$refs.uploadPathFinder.checkPath();
+      if(tmp) {
+        let {data: res} = await this.$http.post("/file/moveFile",
+            {
+              user_id: this.$store.state.user_id,
+              node_id: this.item.node_id,
+              new_nodeId: this.moveToInput,
+            }
+        );
+        if (res.code === 200) {
+          this.moveVisible = false;
+          this.$emit("reload");
+          this.$notify(
+              {
+                title: '移动文件成功',
+                type: 'success',
+                message: `${this.item.file_name}已被移动至目的地！`,
+                position: 'bottom-right',
+                customClass: "message",
+              }
+          );
+        }else if(res.code === 404){
+          this.tpError = true
+          this.errorDealing(null,"fileNameInput","tpErrorMessage");
+        }
+      }
+    },
+   deleteProgress(){
       this.$confirm('你确定是否删除该文件？', '你确定吗？', {
         confirmButtonText: '确定',
         cancelButtonText: '算了',
         type: 'warning'
-      }).then(() => {
-        let {data:res} = this.$http.post("/file/deleteFile",
+      }).then(async () => {
+        let {data: res} = await this.$http.post("/file/deleteFile",
             {
-              user_id:this.$store.state.user_id,
-              node_id:this.item.node_id,
+              user_id: this.$store.state.user_id,
+              node_id: this.item.node_id,
             }
+        ).catch((error) => {
+          if(error.status !== 401) {
+            this.$message.error('删除出现未知问题，请联系Van！ Code:' + error.message);
+          }}
         );
 
-        if(res.code === 200){
-          if(this.item.content_type == "folder-fill" ){
-            this.$store.commit("deleteFile",this.item.node_id);
-          }else{
-            this.$store.commit("deleteFolder",this.item.node_id);
-          }
-
+        if (res.code === 200) {
+          this.$emit("reload");
           this.$notify(
               {
                 title: '删除文件成功',
@@ -247,13 +313,16 @@ export default {
           this.openDialogVisible = true;
         }
         else{
-          await this.getHash();
-          this.liveSrc = `http://192.168.1.143:9090/vopen/${this.hash}`;
+          await this.getOpenHash();
+          this.liveSrc = `http://192.168.1.143:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
           this.dialogVisible = false;
           this.openDialogVisible = true;
         }
 
-      }else{
+      }else if(this.isFolder){
+        this.$emit("needRedirect","/mainpage/disk" + this.item.file_path);
+      }
+      else{
         this.$notify(
           {
             title: '暂不支持该类型文件在线预览',
@@ -267,7 +336,7 @@ export default {
     },
 
     async choose(event) {
-      if (this.item.content_type == "folder-fill") {
+      if (this.isFolder) {
            this.$emit("needRedirect","/mainpage/disk" + this.item.file_path);
       }else{
         this.dialogVisible = true;
@@ -316,7 +385,41 @@ export default {
 
     },
 
-
+    async getOpenHash(){
+      let{data : res}= await this.$http.get("/file/getOpenMd5",{
+        params:{
+          user_id:this.$store.state.user_id,
+          node_id:this.item.node_id,
+        },
+      });
+      if(res.code === 200){
+        this.hash = res.data;
+      }
+      else if(res.code === 300){
+        const loading = this.$loading({
+          lock: true,
+          text: '侦测到不支持的解码格式，正在转码，请稍后...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        await this.$http.get("/file/transcode",{
+          params:{
+            user_id:this.$store.state.user_id,
+            node_id:this.item.node_id,
+          },
+        }).then((data) =>
+        {
+          if(data.data.code === 200){
+            this.hash = data.data.data
+            loading.close();
+          }
+        }).catch((error) => {
+          if(error.status !== 401) {
+              this.$message.error('转码出现未知问题，请联系Van！ Code:' + error.message);
+        }
+        });
+      }
+    },
     async getHash(){
       let{data : res}= await this.$http.get("/file/getMd5",{
         params:{
@@ -333,13 +436,15 @@ export default {
         await this.getHash();
         const a = document.createElement('a');
         a.download = `nmsl + ${this.item.file_name}`;
-        a.href = `http://192.168.1.143:9090/vdownload/${this.hash}`;
+        a.href = `http://192.168.1.143:9090/vdownload/${this.hash}?token=${localStorage.loginToken}`;
         a.click();
     }
   },
   components:{
+    RenameDialog,
     Vbotton,
-    VueStar
+    VueStar,
+    PathFinder,
   },
 
   watch:{
@@ -607,7 +712,13 @@ display: -webkit-box;
   top:-38px;
   right: -38px;
 }
-
+.uploadBody{
+  display: flex;
+  justify-content: space-around;
+}
+.uploadBlock{
+  width: 100%;
+}
 </style>
 
 <style>
@@ -623,5 +734,12 @@ display: -webkit-box;
 
 .showData .el-dialog__body{
   color: white !important;
+}
+
+.documentBlock .favorite .VueStar__ground .VueStar__icon{
+  color: #737373;
+}
+.errorMsgs{
+  margin-bottom: 10px;
 }
 </style>

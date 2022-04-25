@@ -3,27 +3,40 @@
 </template>
 
 <script>
-import SparkMD5 from "spark-md5";
+import Worker from '@/assets/methods/test.worker.js'
 export default {
   name: "UpAndDownload",
   inject:['reload'],
   data(){
     return{
       blockSize : 5*1024*1024,
-
     }
   },
   methods:{
     async uploadFile(file) {
-      const buffer =this.preHandleFile(file.file);
-      const spark = new SparkMD5.ArrayBuffer();
-      spark.append(buffer);
-      const hash = spark.end();
-      const fs = this.fileSize(file.file.size);
-      this.$store.commit("updateState/pushFile", [file.file, fs, hash]);
+      let worker = new Worker();
+      worker.postMessage(file.file);
+      worker.onmessage = (event) => {
+        const hash = event.data;
+        if(hash === "error"){
+          this.$notify({
+            title: '转换文件',
+            type: 'error',
+            message: `${file.file.name} 转换文件格式发生错误！`,
+            position: 'bottom-right',
+            customClass: "message",
+          });
+          this.$store.commit("updateState/updateTotallyCompleteFailed", file.file);
+          return;
+        }else{
+          const fs = this.fileSize(file.file.size);
+          this.$store.commit("updateState/pushFile", [file.file, fs, hash]);
 
-      let partList = this.chunkList(hash, file.file);
-      this.$store.commit("updateState/updatePartList", [file.file.uid, partList]);
+          let partList = this.chunkList(hash, file.file);
+          this.$store.commit("updateState/updatePartList", [file.file.uid, partList]);
+        }
+
+      }
     },
 
     async dragUploadFile(fileList) {
@@ -41,7 +54,7 @@ export default {
         this.$store.commit("updateState/updatePartList", [fileList[i].uid, partList]);
       }
     },
-    async getUpdatedFiles(hash,uid,name,length) {
+    async getUpdatedFiles(hash,uid,name,length,realSize) {
       this.$store.commit("updateState/updateStatus",[uid,"正在上传"]);
       this.$notify({
         title: '上传开始！',
@@ -56,15 +69,18 @@ export default {
           uid:uid,
           file_name:name,
           user_id:this.$store.state.user_id,
-          node_id:this.$store.state.updateState.idToGo
+          node_id:this.$store.state.updateState.idToGo,
+          file_size:realSize
         }})
           .catch((error) => {
-        this.$message.error("上传发起出现未知异常，请联系Van! Code: " + error.message);
-        this.$store.commit("updateState/updateCompleteFailed", uid);
-        this.uploadVisible = false;
+                if(error.status !== 401) {
+                  this.$message.error("上传发起出现未知异常，请联系Van! Code: " + error.message);
+                  this.$store.commit("updateState/updateCompleteFailed", uid);
+                  this.uploadVisible = false;
+                }
       });
       if(res.code === 200) {
-        this.$store.commit("updateState/updateFileType",res.data.content_type);
+        this.$store.commit("updateState/updateFileType",[uid,res.data.content_type]);
         if(res.data.sliceNo === -1) {
           this.uploadBegin(0,hash,uid,length);
         }else {
@@ -126,7 +142,9 @@ export default {
         }
 
       } catch (error) {
-        console.log(error)
+        if(error.status !== 401) {
+          console.log(error)
+        }
       }
 
 
@@ -134,8 +152,10 @@ export default {
     async uploadComplete(hash,uid){
       this.$store.commit("updateState/updateStatus",[uid,"少女祈祷中.."]);
       let name = "";
+      let tmpElement = {};
       for (let element of this.$store.state.updateState.uploadingFiles) {
         if (element.id === uid) {
+          tmpElement = element;
           name =  element.name;
           break;
         }
@@ -146,12 +166,15 @@ export default {
           uid:uid,
         }})
           .catch((error) => {
-            this.$message.error("上传结束时出现未知异常，请联系Van! Code: " + error.message);
-            this.$store.commit("updateState/updateCompleteFailed", uid);
-            this.uploadVisible = false;
+                if(error.status !== 401) {
+                  this.$message.error("上传结束时出现未知异常，请联系Van! Code: " + error.message);
+                  this.$store.commit("updateState/updateCompleteFailed", uid);
+                  this.uploadVisible = false;
+                }
           });
       if(res.code == 200){
         this.$store.commit("updateState/updateCompleted",uid);
+        await this.uploadhistory(tmpElement);
         this.reload();
         this.$notify({
           title: '上传完成',
@@ -173,8 +196,10 @@ export default {
 
     async uploadAbort(hash,uid){
       let name = "";
+      let tmpElement = {};
       for (let element of this.$store.state.updateState.uploadingFiles) {
         if (element.id === uid) {
+          tmpElement = element;
           name =  element.name;
           break;
         }
@@ -185,12 +210,15 @@ export default {
           uid:uid,
         }})
           .catch((error) => {
-            this.$message.error("上传终止结束时出现未知异常，请联系Van! Code: " + error.message);
-            this.$store.commit("updateState/updateCompleteFailed", uid);
-            this.uploadVisible = false;
+            if(error.status !== 401) {
+              this.$message.error("上传终止结束时出现未知异常，请联系Van! Code: " + error.message);
+              this.$store.commit("updateState/updateCompleteFailed", uid);
+              this.uploadVisible = false;
+            }
           });
       if(res.code == 200){
         this.$store.commit("updateState/realAbort",uid);
+        await this.uploadhistory(tmpElement);
         this.$notify({
           title: '上传终止',
           type: 'warning',
@@ -233,26 +261,29 @@ export default {
         }
       }
     },
-    preHandleFile(file){
-
-       return new Promise((resolve, reject) => {
-          const fr = new FileReader()
-          fr.readAsArrayBuffer(file)
-          fr.onload = e => {
-            resolve(e.target.result)
-          }
-          fr.onerror = () => {
-            this.$notify({
-              title: '转换文件',
-              type: 'error',
-              message: `${file.name} 转换文件格式发生错误！`,
-              position: 'bottom-right',
-              customClass: "message",
-            });
-            reject(new Error('转换文件格式发生错误'))
-          }
-        })
+    async uploadhistory(element){
+      let {data:res} = await this.$http.post('/setHistory',{
+        user_id:this.$store.state.user_id,
+        name:element.name,
+        size:element.size,
+        id:element.id,
+        status:element.status,
+        complete:element.complete,
+        hash:element.hash,
+        fileType:element.fileType,
+        noErrorFlag:element.noErrorFlag,
+        isFinished:element.isFinished,
+        isPause:element.isPause,
+        isGG:element.isGG,
+      });
+      if(res.code === 200){
+        return true;
+      }
+      else {
+        return false;
+      }
     },
+
     mapPostRequest(uploadList,uid){
         let total = 0;
         for(let element of this.$store.state.updateState.uploadingFiles){
@@ -323,9 +354,7 @@ export default {
       //const partSize = file.size / count;
       const suffix = /\.([0-9A-z-_]+)$/i.exec(file.name)[1];
       let i = 1, cur = 0;
-      console.log(suffix)
       while (i <= count) {
-        console.log(suffix)
         const item = { chunk: file.slice(cur, cur+this.blockSize), filename: `${md5hash}_${i}.${suffix}` };
         cur += this.blockSize;
         partList.push(item);
@@ -366,7 +395,7 @@ export default {
           this.$store.commit("updateState/popFile");
           let tmp = this.$store.state.updateState.tmpElement;
           this.$store.commit("updateState/pushToUploading");
-          this.getUpdatedFiles(tmp.hash,tmp.id,tmp.name,tmp.filePartList.length);
+          this.getUpdatedFiles(tmp.hash,tmp.id,tmp.name,tmp.filePartList.length,tmp.realSize);
 
         }
       }

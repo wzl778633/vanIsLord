@@ -26,7 +26,11 @@ export default {
       api:"",
       defaultStyle: {
         className: 'os-theme-thick-light',
-        scrollbars: { autoHide : "leave",},
+        overflowBehavior : {
+          x : "hidden",
+        },
+        scrollbars: { autoHide : "leave",
+        },
 
       }
     }
@@ -52,7 +56,9 @@ export default {
             "user_id": this.$store.state.user_id,
           },
       ).catch((error) => {
-        this.$message.error('文件查询出现未知问题，请联系Van！ Code:' + error.message);
+            if(error.status !== 401) {
+              this.$message.error('文件查询出现未知问题，请联系Van！ Code:' + error.message);
+            }
       });
       if(res.code == 200){
         this.$store.commit("updateFileList",res.data.content);
@@ -72,7 +78,9 @@ export default {
             "content": arr,
           },
       ).catch((error) => {
-        this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
+            if(error.status !== 401) {
+              this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
+            }
       });
       if(res.code == 200){
         for(let i of res.data){
@@ -96,7 +104,9 @@ export default {
             "node_id": Number(id),
           },
       ).catch((error) => {
-        this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
+        if(error.status !== 401) {
+          this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
+        }
       });
       if(res.code == 200){
         this.$store.commit("updateDirList",res.data[0]);

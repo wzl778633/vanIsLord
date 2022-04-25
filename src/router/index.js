@@ -6,8 +6,7 @@ import MainPart from '../components/MainPart.vue'
 import ShowPart from '../components/ShowPart.vue'
 import Error from '../views/ErrorPage.vue'
 import UploadPage from '../views/UploadPage.vue'
-import DownloadPage from "@/views/DownloadPage";
-
+import { Notification } from 'element-ui';
 Vue.use(VueRouter)
 
 const routes = [
@@ -33,7 +32,6 @@ const routes = [
     component: MainPage,
     children:[
       {path : 'disk/:path+', component: MainPart,},
-      {path : 'download', component: DownloadPage,},
       {path : 'upload', component: UploadPage,},
       {path : 'my_picture', component: ShowPart,},
       {path : 'my_video', component: ShowPart,},
@@ -47,10 +45,30 @@ const routes = [
   },
 ]
 
+
 const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
   routes
 })
-
+router.beforeEach((to,from,next) =>{
+  if(to.path.includes('/mainpage')){
+    const token = localStorage.getItem('loginToken');
+    if(token){
+      next()
+    }else{
+      next('/')
+      Notification.error(
+          {
+            title: '你未能通过Van的凝视',
+            type: 'error',
+            message: `无法识别你的身份，请重新登录！`,
+            position: 'bottom-right',
+            customClass: "message",
+          });
+    }
+  }else{
+    next()
+  }
+})
 export default router

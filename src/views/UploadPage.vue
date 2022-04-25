@@ -106,15 +106,21 @@ export default {
         confirmButtonText: '是的，删！',
         cancelButtonText: '算了算了',
         type: 'error'
-      }).then(() => {
-        this.$store.commit("updateState/removeRecord",id);
-        this.$notify({
-          title: '删除成功',
-          type: 'success',
-          message: `${name}的上传记录删除成功!`,
-          position: 'bottom-right',
-          customClass: "message"
+      }).then(async () => {
+        let {data:res} = await this.$http.post('/deleteHistory',{
+          user_id:this.$store.state.user_id,
+          id:id,
         });
+        if(res.code === 200){
+          this.$store.commit("updateState/removeRecord",id);
+          this.$notify({
+            title: '删除成功',
+            type: 'success',
+            message: `${name}的上传记录删除成功!`,
+            position: 'bottom-right',
+            customClass: "message"
+          });
+        }
       }).catch(() => {
         this.$notify({
           title: '你是傻逼',
@@ -150,6 +156,7 @@ export default {
     });
     this.tableData = this.$store.state.updateState.uploadingFiles.concat(this.$store.state.updateState.uploadedFiles);
   },
+
 }
 </script>
 
