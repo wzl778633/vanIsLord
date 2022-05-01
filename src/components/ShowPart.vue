@@ -1,9 +1,9 @@
 <template>
   <div class = "mainShell">
-    <overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 100px); box-sizing: border-box;
+    <overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 110px); box-sizing: border-box;
   padding: 20px;">
       <div id ="ccc">
-        <DocumentList id = "dList" :itemList="items" @pass = "decode"></DocumentList>
+        <DocumentList id = "dList" :itemList="items" @pass = "decode " @reload = "reloadPass"></DocumentList>
       </div>
     </overlay-scrollbars>
   </div>
@@ -40,6 +40,9 @@ export default {
     DocumentList,
   },
   methods:{
+    reloadPass(){
+      this.$emit("reload");
+    },
     updateItems(){
       this.items.splice(0, this.items.length);
       //setTimeout (() => {

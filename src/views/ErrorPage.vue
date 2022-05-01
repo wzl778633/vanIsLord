@@ -58,7 +58,7 @@ export default {
 <style scoped>
 @font-face {
   font-family: "Comfortaa";
-  src:url("../assets/Comfortaa-VariableFont_wght.ttf") format('truetype');
+  src:url("../assets/fonts/Comfortaa-VariableFont_wght.ttf") format('truetype');
 
 }
 

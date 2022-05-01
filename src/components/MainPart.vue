@@ -5,7 +5,7 @@
 
 
     <div class = "dragAble" @dragenter = "handleDropEvent"  @dragover = "handleDropOver">
-    <overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 100px); box-sizing: border-box;
+    <overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 150px); box-sizing: border-box;
   padding: 20px;">
 
         <DocumentList id = "dList" :itemList="items" @pass = "decode" @reload = "reloadPass"></DocumentList>
@@ -189,7 +189,6 @@ export default {
   width: 100%;
   height:100%;
   position: relative;
-
 
 }
 

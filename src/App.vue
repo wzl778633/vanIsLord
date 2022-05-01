@@ -11,6 +11,7 @@ import Loginpage from '@/views/Gate.vue'
 import Mainpage from '@/views/MainPage.vue'
 
 
+
 export default {
   components:{
     "LoginPage" : Loginpage,
@@ -21,7 +22,20 @@ export default {
       loadFinished:false,
     }
   },
+  beforeRouteLeave (to, from,next) {
+    const answer = window.confirm('Do you really want to leave? you have unsaved changes!')
+    if (!answer) return false
+  },
   created() {
+    window.onbeforeunload = () => {
+      let x = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles);
+      if(x.length != 0){
+        return "handle your events or msgs here";
+      }
+
+    }
+
+
     if(localStorage.loginToken){
      this.$http.post("/user/checkToken",{
         //没有userId
@@ -74,6 +88,7 @@ export default {
       }
     }
   },
+
 
 }
 

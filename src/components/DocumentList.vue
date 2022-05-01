@@ -6,6 +6,9 @@
     <Document :item = "item" @needRedirect = "passThough" @reload = "reload" :ref="item.node_id" v-contextmenu:contextmenu></Document>
   </li>
 </ul>
+  <div class = "nothing" v-if="isNoContent">
+    <p>这里还没有东西哦！<br/>Nothing Here!</p>
+  </div>
   <v-contextmenu ref="contextmenu" theme="dark" @contextmenu = "initial">
     <v-contextmenu-item @click = "changeDialogShell"><i class = "bi-check2-circle"></i> 打开</v-contextmenu-item>
     <v-contextmenu-item v-if = "!this.isFolder" @click = "downloadShell"><i class = "bi-cloud-download"></i> 下载</v-contextmenu-item>
@@ -14,6 +17,7 @@
     <v-contextmenu-item @click = "renameShell"><i class = "bi-pen"></i> 重命名</v-contextmenu-item>
     <v-contextmenu-item v-if = "!this.isFavShell" @click = "changeFavorite"><i class = "bi-star-fill"></i> 加入收藏</v-contextmenu-item>
     <v-contextmenu-item v-else @click = "changeFavorite"><i class = "bi-star"></i> 取消收藏</v-contextmenu-item>
+    <v-contextmenu-item v-if = "this.isFolder" @click = "detailCheckShell"><i class = "bi-folder-check"></i> 文件夹详情</v-contextmenu-item>
   </v-contextmenu>
 </div>
     <!--/transition-group-->
@@ -30,6 +34,7 @@ export default {
       isFavShell:false,
       isFolder: false,
       whichNode:0,
+      isNoContent:false,
     }
   },
   components:{
@@ -59,11 +64,26 @@ export default {
     moveToShell(){
       this.$refs[this.whichNode][0].moveVisible = true;
     },
+    detailCheckShell(){
+      this.$refs[this.whichNode][0].detailCheck();
+    },
     reload(){
       this.$emit("reload");
     },
     passThough(path){
       this.$emit("pass",path);
+    }
+  },
+  watch:{
+    'itemList':{
+      handler(val){
+        if(val.length === 0){
+          this.isNoContent = true
+        }
+        else{
+          this.isNoContent = false
+        }
+      }
     }
   }
 }
@@ -74,7 +94,18 @@ export default {
   margin:0px;
   padding:0px;
 }
-
+.nothing{
+  width: 100%;
+  height: calc(100vh - 300px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.nothing > p{
+  font-family: "AaGothic (Non-Commercial Use)";
+  text-align: center;
+  color: white;
+}
 .document{
   width: 100%;
   max-height: 100%;
@@ -110,7 +141,7 @@ li{
 
 <style>
 .v-contextmenu{
-  width: 100px;
+  width: 115px;
   background-color: rgba(0,0,0,0.9) !important;
   border: transparent !important;
   -webkit-box-shadow: 2px 2px 8px 0 rgb(0 0 0 / 20%) !important;

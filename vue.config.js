@@ -35,6 +35,11 @@ module.exports = defineConfig({
   configureWebpack: {
 
     devtool: 'source-map',
+    performance:{
+      maxAssetSize: 30000000,
 
+    }
   },
+
+
 })

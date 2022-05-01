@@ -48,7 +48,7 @@ export default {
 }
 
 #upload{
-  font-family: Helvetica, sans-serif;
+  font-family: "AaGothic (Non-Commercial Use)",Helvetica, sans-serif;
   color: #fff;
   background: linear-gradient(to right, #E040FB, #00BCD4);
   position: relative;
@@ -61,6 +61,7 @@ export default {
   overflow: hidden;
   box-shadow: 0 4px 12px 0 rgb(20, 25, 38);
   z-index: 1;
+  cursor: pointer;
 }
 
 #upload.rounded{

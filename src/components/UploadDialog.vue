@@ -2,6 +2,8 @@
   <el-dialog
       title="上传文件"
       :visible.sync="uploadVisible"
+      v-if="uploadVisible"
+      :append-to-body = "true"
       width="70%">
     <div class = "uploadBody">
 

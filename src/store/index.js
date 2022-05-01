@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import fa from "element-ui/src/locale/lang/fa";
+
 
 Vue.use(Vuex)
 const updateModule = {
@@ -8,6 +8,7 @@ const updateModule = {
   state: () => ({
     idToGo:1,
     tmpElement:{},
+    preparedFiles: [],
     uploadingFiles: [],
     waitingFiles:[],
     uploadedFiles: [],
@@ -16,8 +17,12 @@ const updateModule = {
 
 
   mutations: {
-    pushFile(state, [file, filesize,hash]){
-      state.waitingFiles.unshift({
+    pushFile(state, [file, filesize]){
+      let date = new Date();
+      let year = date.getFullYear();
+      let month = date.getMonth() + 1;
+      let dates = date.getDate();
+      state.preparedFiles.unshift({
         name: file.name,
         size: filesize,
         realSize:file.size,
@@ -25,11 +30,12 @@ const updateModule = {
         speed:"",
         id: file.uid,
         leftTime:"",
-        status:"排队中...",
+        status:"准备中..",
         complete: 0,
         tmpComplete: 0 ,
-        hash:hash,
-        fileType:"folder-fill",
+        date: `${year}-${month}-${dates}`,
+        hash:"",
+        fileType:"question-octagon",
         filePartList:[],
         pausedList:[],
         noErrorFlag: true,
@@ -38,7 +44,16 @@ const updateModule = {
         isGG:false,
       });
     },
+    updateHash(state, [uid,hash]){
+      for (let element of state.preparedFiles){
+        if(element.id === uid){
+          element.hash = hash;
+          element.status = "排队中..";
+          break;
+        }
+      }
 
+    },
     popFile(state){
       state.tmpElement = state.waitingFiles.pop();
     },
@@ -47,9 +62,11 @@ const updateModule = {
       state.uploadingFiles.unshift(state.tmpElement);
       state.tmpElement = {};
     },
-    updateCompleteNess(state, uid){
+    updateCompleteNess(state, [uid,speed,leftTime]){
       for (let element of state.uploadingFiles){
-        if(element.id == uid){
+        if(element.id === uid){
+          element.speed = speed;
+          element.leftTime = leftTime;
           element.tmpComplete = element.complete;
           element.finishSize = element.finishSize + (5*1024*1024);
           break;
@@ -57,11 +74,9 @@ const updateModule = {
       }
 
     },
-    addCompleteNess(state, [uid, complete,speed,leftTime]){
+    addCompleteNess(state, [uid, complete]){
       for (let element of state.uploadingFiles){
         if(element.id == uid){
-          element.speed = speed;
-          element.leftTime = leftTime;
           element.complete = Number((element.tmpComplete + complete).toFixed(2));
           if(element.complete > 100){
             element.complete = 100;
@@ -78,7 +93,7 @@ const updateModule = {
           element.complete = 100;
           element.isFinished = true;
           element.filePartList = [];
-          this.commit("updateState/removeFile",uid);
+          this.commit("updateState/removeFile",element);
           state.uploadedFiles.unshift(element);
           break;
         }
@@ -92,20 +107,43 @@ const updateModule = {
         }
       }
     },
-    realAbort(state, uid){
+    realAbort(state, [uid,status]){
+      if(status == '排队中..') {
+        for (let element of state.waitingFiles){
+          if(element.id == uid){
+            element.status = "上传中断";
+            element.isFinished = true;
+            element.filePartList = [];
+            state.waitingFiles.splice(state.waitingFiles.indexOf(element), 1);
+            state.uploadedFiles.unshift(element);
+            break;
+          }
+        }
+      }
+      else if(status == '正在上传' || status == '已暂停'){
+        for (let element of state.uploadingFiles){
+          if(element.id == uid){
+            element.status = "上传中断";
+            element.isFinished = true;
+            element.filePartList = [];
+            this.commit("updateState/removeFile",element);
+            state.uploadedFiles.unshift(element);
+            break;
+          }
+        }
+      }
+
+    },
+    updateAbort(state, uid){
       for (let element of state.uploadingFiles){
         if(element.id == uid){
-          element.status = "上传中断";
-          element.isFinished = true;
-          element.filePartList = [];
-          this.commit("updateState/removeFile",uid);
-          state.uploadedFiles.unshift(element);
+          element.isGG = true;
           break;
         }
       }
     },
-    updateAbort(state, uid){
-      for (let element of state.uploadingFiles){
+    updateWaitAbort(state, uid){
+      for (let element of state.waitingFiles){
         if(element.id == uid){
           element.isGG = true;
           break;
@@ -119,47 +157,44 @@ const updateModule = {
           element.noErrorFlag = false;
           element.isFinished = true;
           element.filePartList = [];
-          this.commit("updateState/removeFile",uid);
+          this.commit("updateState/removeFile",element);
           state.uploadedFiles.unshift(element);
           break;
         }
       }
     },
 
-    updateTotallyCompleteFailed(state, file){
-          let element = {
-            name: file.name,
-            size: '未知',
-            realSize:file.size,
-            id: file.uid,
-            status:"上传发起失败",
-            complete: 0,
-            hash:'error',
-            fileType:"question-octagon",
-            noErrorFlag: false,
-            isFinished: true,
-            isPause:false,
-            isGG:false,
+    updateTotallyCompleteFailed(state, uid){
+      for (let element of state.preparedFiles){
+        if(element.id == uid) {
+          if(element.size == ""){
+            element.size = '未知';
           }
+          element.status = "上传发起失败";
+          element.noErrorFlag= false;
+          element.isFinished= true;
+          element.isPause=false;
+          element.isGG=false;
+          element.hash = 'error',
+          state.preparedFiles.splice(state.preparedFiles.indexOf(element), 1);
           state.uploadedFiles.unshift(element);
+        }
+      }
     },
 
     updatePartList(state, [uid,partList]){
-      for (let element of state.waitingFiles){
+      for (let element of state.preparedFiles){
         if(element.id === uid){
           element.filePartList = partList;
+          let tmp = state.preparedFiles.splice(state.preparedFiles.indexOf(element), 1)[0];
+          state.waitingFiles.unshift(tmp);
           break;
         }
       }
     },
-    removeFile(state, uid){
-      for (let element of state.uploadingFiles){
-        if(element.id == uid){
-          state.uploadingFiles.splice(state.uploadingFiles.indexOf(element), 1);
-          break;
-        }
-      }
 
+    removeFile(state, element){
+          state.uploadingFiles.splice(state.uploadingFiles.indexOf(element), 1);
     },
     initialUploadedFiles(state,files){
       state.uploadedFiles = files;
@@ -217,8 +252,8 @@ const updateModule = {
   },
   actions:{
 
-    removeFileAsync(context,uid){
-      context.commit("updateState/removeFile",uid);
+    removeFileAsync(context,element){
+      context.commit("updateState/removeFile",element);
     },
     updateCompletedAsync(context,uid){
       context.commit("updateState/updateCompleted",uid);
@@ -231,6 +266,14 @@ const updateModule = {
     },
     updateAbortAsync(context,uid){
       context.commit("updateAbort",uid);
+    },
+
+    updatePrepareAbortAsync(context,uid){
+      context.commit("updatePrepareAbort",uid);
+    },
+
+    updateWaitAbortAsync(context,uid){
+      context.commit("updateWaitAbort",uid);
     },
   },
 
@@ -247,7 +290,7 @@ export default new Vuex.Store({
     node_id:1,
     currentPath:"",
     avatarBase64:"",
-
+    videoFormatCheck: {},
     //lastPath:"",
     currentDecodePath:[],
     rightNowDirList:   [],
@@ -256,6 +299,9 @@ export default new Vuex.Store({
   },
 
   mutations: {
+    updataVideoFormatCheck(state,format){
+      state.videoFormatCheck = format;
+    },
     determineUserID(state, UserID){
       state.user_id = UserID;
     },

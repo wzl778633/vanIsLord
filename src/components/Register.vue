@@ -143,7 +143,7 @@ export default {
     },
 
     async register(event) {
-      const response = await fetch("http://192.168.1.143:9090/user/signin/test", {
+      const response = await fetch("http://192.168.1.143:9090/user/signin", {
         method: 'POST',
         mode: 'cors',
         cache: "default",

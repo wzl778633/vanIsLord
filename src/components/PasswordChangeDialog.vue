@@ -3,7 +3,6 @@
       title="重设密码"
       :visible.sync="uploadVisible"
       v-if="uploadVisible"
-      :destroy-on-close = "true"
       @close = "cancel"
       width="50%">
     <div class = "uploadBody">
@@ -83,6 +82,13 @@ export default {
   methods: {
 
     cancel(){
+      this.password="";
+      this.rePassword="";
+      this.oldPassword="";
+          this.passwordError=false;
+          this.rePasswordError=false;
+          this.oldPasswordError=false;
+          this.passwordCheckError=false;
       this.$emit('closePasswordChange' );
     },
 
@@ -135,7 +141,7 @@ export default {
                     {
                       title: '密码修改成功',
                       type: 'success',
-                      message: `已成功修改密码！`,
+                      message: `已成功修改密码！请重新登录！`,
                       position: 'bottom-right',
                       customClass: "message",
                     }
@@ -144,7 +150,7 @@ export default {
                 this.password = "",
                 this.rePassword = "",
                 this.oldPassword = "",
-                this.$emit('closePasswordChange');
+                this.$emit('closePasswordChangeWithS');
               } else if (res.code === 401) {
                 this.passwordError = false;
                 this.rePasswordError = false;

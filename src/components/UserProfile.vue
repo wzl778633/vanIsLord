@@ -4,14 +4,14 @@
   <div v-if = "ifRemove" id = "userProfile">
     <div class = "innerUserProfile">
       <div class="AlluserInfo">
-        <el-avatar :size="180" :src="touXiangsrc"></el-avatar>
+        <el-avatar v-if="refresh" :size="180" :src="touXiangsrc" class = "profileAvatar"></el-avatar>
         <div class="userInfo">
           <p class = "info"><em>用户名：</em>{{ this.$store.state.user_name }}</p>
           <p class = "info"><em>注册邮箱：</em>{{ this.email }}</p>
           <p class = "info"><em>会员级别：</em>傻逼</p>
         </div>
       </div>
-      <profile-chart :size = size></profile-chart>
+      <profile-chart v-if = "ifFinishedLoading" :size = size></profile-chart>
       <div class = "buttonGroup">
         <VBotton class = "profileButton" :isWorking = "false" :clickMethod = "openAvatarDialog" :nameForButton = "'修改头像'" :isIcon ="true" :iconClass = "'bi-person-circle'" :vStyle = "'rounded'"></VBotton>
         <VBotton class = "profileButton" :isWorking = "false" :clickMethod = "openPasswordDialog" :nameForButton = "'修改密码'" :isIcon ="true" :iconClass = "'bi-bootstrap-reboot'" :vStyle = "'rounded'"></VBotton>
@@ -20,6 +20,7 @@
       <el-dialog
           title="注销确认"
           :visible.sync="openExit"
+          :append-to-body = "true"
           width="20%">
         <span>你确定要退出登录吗？</span>
         <span slot="footer" class="dialog-footer">
@@ -33,8 +34,8 @@
   <transition name = "exchange" type = "transition">
     <div key="needToShow" v-if = "ifRemove" @click = "remove" id = "background"></div>
   </transition>
-  <AvatarUploudDialog :isOpen = "openAvatar" @closeAvatarUpload = "closeAvatarDialog"></AvatarUploudDialog>
-  <PasswordChangeDialog :isOpen = "openPassword" @closePasswordChange = "closePasswordDialog"></PasswordChangeDialog>
+  <AvatarUploudDialog :isOpen = "openAvatar" @closeAvatarUpload = "closeAvatarDialog" @reload = "reload"></AvatarUploudDialog>
+  <PasswordChangeDialog :isOpen = "openPassword" @closePasswordChange = "closePasswordDialog" @closePasswordChangeWithS = "closePasswordDialogWithS"></PasswordChangeDialog>
 </div>
 </template>
 
@@ -59,15 +60,28 @@ export default {
       size:[],
       openAvatar:false,
       openPassword:false,
-      touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}`,
+      touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
       openExit:false,
+      ifFinishedLoading:false,
+      refresh:true,
     }
   },
   methods:{
+    reload(){
+      this.touXiangsrc = ""
+      this.$nextTick(function() {
+        this.touXiangsrc = `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`;
+      })
+      this.$emit("reloadAvatar")
+    },
     closeConfirm(){
+      this.openExit = false;
+      this.remove();
+      setTimeout(()=>{this.clean()},0);
+    },
+    clean(){
       localStorage.removeItem('loginToken');
       localStorage.clear();
-      this.openExit = false;
       if(this.$route.fullPath !== "/") {
         this.$router.replace("/");
       }
@@ -93,7 +107,11 @@ export default {
     closePasswordDialog(){
       this.openPassword = false;
     },
-
+    closePasswordDialogWithS(){
+      this.openPassword = false;
+      this.remove();
+      setTimeout(()=>{this.clean()},0);
+    }
 
   },
 
@@ -103,8 +121,24 @@ export default {
         const body = document.querySelector("body");
         if (val){
           body.style.overflow = "hidden";
-        }else{
+          this.$http.post("/user/profile",{
+            user_id:this.$store.state.user_id,
+          }).then((data)=>{
+            let res = data.data;
+            if(res.code === 200){
+              this.email = res.data.userEmail;
+              this.actualSize = [res.data.picture,res.data.filmSize,res.data.musicSize,res.data.others,res.data.availableSize];
+              this.size = res.data.ratio.map((item,index) => { return {percentage: item, actualSize:this.actualSize[index]}});
+              this.ifFinishedLoading =true;
+            }
 
+          }).catch((error) => {
+            if(error.status !== 401) {
+              this.$message.error('获取用户资料出现未知问题，请联系Van！ Code:' + error.message);
+            }
+          });
+        }else{
+          this.ifFinishedLoading =false;
           setTimeout(()=>{body.style.overflow = "visible";},400)
         }
       }
@@ -129,10 +163,7 @@ export default {
         this.email = res.data.userEmail;
         this.actualSize = [res.data.picture,res.data.filmSize,res.data.musicSize,res.data.others,res.data.availableSize];
         this.size = res.data.ratio.map((item,index) => { return {percentage: item, actualSize:this.actualSize[index]}});
-
       }
-
-
     }).catch((error) => {
       if(error.status !== 401) {
         this.$message.error('获取用户资料出现未知问题，请联系Van！ Code:' + error.message);
@@ -157,7 +188,9 @@ export default {
   initial-value: 132deg;
   inherits: false;
 }
-
+.profileAvatar{
+  filter: drop-shadow(0px 0px 10px rgba(150, 150, 150, 0.5));
+}
 .AlluserInfo{
   width: 100%;
   display: flex;
@@ -186,7 +219,7 @@ export default {
   position: absolute;
   top:0;
   opacity: 0.7;
-  z-index: 2;
+  z-index: 998;
 
 }
 .innerUserProfile{
@@ -194,7 +227,7 @@ export default {
   height: 100%;
   background-color: #252830;
   border-radius: 30px 0 0 30px;
-  z-index: 5;
+  z-index: 999;
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
@@ -210,7 +243,7 @@ export default {
   position: absolute;
   top:1%;
   right: -5%;
-  z-index: 5;
+  z-index: 999;
 }
 #userProfile::before {
   content: "";
@@ -309,6 +342,7 @@ export default {
   border: none;
   background: #860abd;
   transition: all 0.3s ease 0.3s;
+  font-family: "AaGothic (Non-Commercial Use)";
 }
 .btn-5:hover {
   color: #ff0000;

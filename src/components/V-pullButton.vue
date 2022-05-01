@@ -101,7 +101,7 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: row;
-  justify-content: end;
+  justify-content: flex-end;
   align-items: center;
   border-radius: 7px;
   z-index: 2;

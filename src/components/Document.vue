@@ -10,30 +10,8 @@
       <img v-else :id = "'s'+item.node_id" :src="imgSrc" style="width: 140px; height: 80px; object-fit: cover" >
       <p id = "showName">{{ item.file_name }}</p>
   </div>
-  <RenameDialog @closeRename = "closeRename" :renameVisible = "renameVisible"></RenameDialog>
-  <el-dialog
-      title="移动到..."
-      :visible.sync="moveVisible"
-      :append-to-body = "true"
-      width="40%">
-    <div class = "uploadBody">
-      <div class = "uploadBlock">
-        <transition name = "tp-error">
-          <el-alert v-show="tpError"
-                    title="禁止原地tp! (你必须移动到不同的文件夹！)"
-                    type="error"
-                    show-icon :closable="false" id = "tpErrorMessage" class="errorMsgs">
-          </el-alert>
-        </transition>
-        <p class = "hint">输入或使用选择器输入你想上传的目标路径。</p>
-        <PathFinder ref = "uploadPathFinder" @pathFinderData = "getData"></PathFinder>
-      </div>
-    </div>
-    <span slot="footer" class="dialog-footer">
-    <el-button @click="moveVisible = false">取 消</el-button>
-    <el-button type="primary" @click="moveTo">移 动</el-button>
-    </span>
-  </el-dialog>
+  <RenameDialog @reload = "reload" @closeRename = "closeRename" :nodeId = "item.node_id" :renameVisible = "renameVisible"></RenameDialog>
+  <MoveToDialog @reload = "reload" @closeMoveTo = "closeMoveTo" :filename="item.file_name" :nodeId = "item.node_id" :moveVisible = "moveVisible"></MoveToDialog>
   <el-dialog
       title=""
       :visible.sync="dialogVisible"
@@ -50,16 +28,17 @@
       <div class = "showDialogInfoBlock"></div>
       <div class = "showDialogInfoBlock">
         <span class = "info">文件名： {{ item.file_name }}</span>
-        <span class = "info">文件大小： FileSize</span>
-        <span class = "info">最后修改时间： FileSize</span>
-        <span class = "info">文件类型： FileSize</span>
+        <span class = "info">文件路径： {{ realData.file_path}}</span>
+        <span class = "info">文件大小： {{ realData.size}}</span>
+        <span class = "info">上传时间： {{ realData.upload_time}}</span>
+        <span class = "info">文件类型： {{realData.content_type}}</span>
         <div class = "infoButton">
           <Vbotton :isWorking = "false"
                    :clickMethod = "changeDialog"
                    :nameForButton = "'打开'"
                    :isIcon ="false"
                    :vStyle = "'rounded'"></Vbotton>
-          <Vbotton :isWorking = "false" :clickMethod = "download" :nameForButton = "'下载'" :isIcon ="false" :vStyle = "'rounded'"></Vbotton>
+          <Vbotton v-if= "!isFolder" :isWorking = "false" :clickMethod = "download" :nameForButton = "'下载'" :isIcon ="false" :vStyle = "'rounded'"></Vbotton>
         </div>
       </div>
     </div>
@@ -91,13 +70,14 @@
 
 import Vbotton from "@/components/V-botton";
 import VueStar from 'vue-star'
-import PathFinder from "@/components/PathFinder.vue"
 import RenameDialog from "@/components/RenameDialog";
+import MoveToDialog from "@/components/MoveToDialog";
 
 
 export default {
   name: "Document",
   props: ["item"],
+  inject:['updateTotalBar'],
   data() {
     return {
       color: "",
@@ -110,10 +90,11 @@ export default {
       liveSrc : "",
       hash:"",
       fullscreenLoading : false,
-      moveVisible:false,
       renameVisible:false,
-      tpError:false,
-      moveToInput:"",
+      moveVisible:false,
+      onlyOneTranscodeError: false,
+      realData:{},
+      notCheckYet : true,
     }
   },
   created() {
@@ -127,7 +108,7 @@ export default {
         this.color = "deepskyblue";
         break;
       case "file-earmark":
-        this.color = "grey";
+        this.color = "#afb4cc";
         break;
       case "film":
         this.color = "#0B63F6";
@@ -144,6 +125,25 @@ export default {
       case "filetype-pdf":
         this.color = "crimson";
         break;
+      case "filetype-pptx":
+      case "filetype-ppt":
+        this.color = "#e76d5e";
+        break;
+      case "filetype-txt":
+        this.color = "#ffffff";
+        break;
+      case "filetype-js":
+        this.color = "#00cb70";
+        break;
+      case "filetype-java":
+        this.color = "#d640e7";
+        break;
+      case "filetype-html":
+        this.color = "#6385ff";
+        break;
+      case "filetype-json":
+        this.color = "#6dab6c";
+        break;
       case "image":
         this.color = "#d57bff";
         const suffix = /\.([0-9A-z]+)$/i.exec(this.item.file_name)[1];
@@ -159,12 +159,12 @@ export default {
             this.imgSrc = "data:image/gif;base64," + this.item.base64;
           }else if(suffix == "ico"){
             this.isNotImage = false;
-            this.imgSrc = "data:image/gif;base64," + this.item.base64;
+            this.imgSrc = "data:image/x-icon;base64," + this.item.base64;
           }
         }
         break;
       default:
-        this.color = "black";
+        this.color = "grey";
         break;
     }
     if(this.item.isFavorite){
@@ -181,6 +181,12 @@ export default {
   },
 
   methods: {
+    reload() {
+      this.$emit("reload");
+    },
+    closeMoveTo(){
+      this.moveVisible = false;
+    },
     closeRename(){
       this.renameVisible = false;
     },
@@ -232,37 +238,7 @@ export default {
         }
       }
     },
-    getData(input) {
-      this.moveToInput = input;
-    },
-    async moveTo(){
-      let tmp = await this.$refs.uploadPathFinder.checkPath();
-      if(tmp) {
-        let {data: res} = await this.$http.post("/file/moveFile",
-            {
-              user_id: this.$store.state.user_id,
-              node_id: this.item.node_id,
-              new_nodeId: this.moveToInput,
-            }
-        );
-        if (res.code === 200) {
-          this.moveVisible = false;
-          this.$emit("reload");
-          this.$notify(
-              {
-                title: '移动文件成功',
-                type: 'success',
-                message: `${this.item.file_name}已被移动至目的地！`,
-                position: 'bottom-right',
-                customClass: "message",
-              }
-          );
-        }else if(res.code === 404){
-          this.tpError = true
-          this.errorDealing(null,"fileNameInput","tpErrorMessage");
-        }
-      }
-    },
+
    deleteProgress(){
       this.$confirm('你确定是否删除该文件？', '你确定吗？', {
         confirmButtonText: '确定',
@@ -282,6 +258,7 @@ export default {
 
         if (res.code === 200) {
           this.$emit("reload");
+          this.updateTotalBar();
           this.$notify(
               {
                 title: '删除文件成功',
@@ -306,7 +283,6 @@ export default {
     },
     async changeDialog(){
       if(this.item.content_type == "film"||this.item.content_type == "image"||this.item.content_type == "filetype-pdf"||this.item.content_type == "music-note-beamed"||this.item.content_type == "filetype-txt"){
-
         if(this.item.content_type == "image"){
           await this.downloadRequest();
           this.dialogVisible = false;
@@ -314,6 +290,16 @@ export default {
         }
         else{
           await this.getOpenHash();
+          if(this.onlyOneTranscodeError === true){
+            this.$notify({
+              title: '不要再给服务器徒增压力了！',
+              type: 'error',
+              message: '一次只能有一个后台转码任务，请耐心等待之前的转码完成后再尝试新的转码,如果你想要在线观看番剧与电影，建议移步至Jellyfin VanIsLord',
+              position: 'bottom-right',
+              customClass: "message",
+            });
+            this.onlyOneTranscodeError = false;
+          }
           this.liveSrc = `http://192.168.1.143:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
           this.dialogVisible = false;
           this.openDialogVisible = true;
@@ -338,6 +324,29 @@ export default {
     async choose(event) {
       if (this.isFolder) {
            this.$emit("needRedirect","/mainpage/disk" + this.item.file_path);
+      }else{
+        await this.detailCheck()
+      }
+    },
+    async detailCheck(){
+      if(this.notCheckYet){
+        let {data:res} = await this.$http.get("/file/detail",{
+          params:{
+            user_id:this.$store.state.user_id,
+            node_id:this.item.node_id,
+          }
+        }).catch((error) => {
+          if(error.status !== 401) {
+            this.$message.error('转码出现未知问题，请联系Van！ Code:' + error.message);
+          }
+        });
+
+        if(res.code === 200){
+          this.realData = res.data;
+          this.realData.content_type = this.realData.content_type  === 'folder' ? '文件夹' : this.realData.content_type.toUpperCase() + ' 文件';
+          this.dialogVisible = true;
+          this.notCheckYet = false;
+        }
       }else{
         this.dialogVisible = true;
       }
@@ -396,29 +405,91 @@ export default {
         this.hash = res.data;
       }
       else if(res.code === 300){
-        const loading = this.$loading({
-          lock: true,
-          text: '侦测到不支持的解码格式，正在转码，请稍后...',
-          spinner: 'el-icon-loading',
-          background: 'rgba(0, 0, 0, 0.7)'
-        });
-        await this.$http.get("/file/transcode",{
-          params:{
-            user_id:this.$store.state.user_id,
-            node_id:this.item.node_id,
-          },
-        }).then((data) =>
-        {
-          if(data.data.code === 200){
-            this.hash = data.data.data
-            loading.close();
-          }
-        }).catch((error) => {
-          if(error.status !== 401) {
-              this.$message.error('转码出现未知问题，请联系Van！ Code:' + error.message);
+
+        let str = res.data.codec;
+
+        switch (str){
+          case 'h264':
+            if(this.$store.state.videoFormatCheck.h264){
+              this.hash = res.data.hash;
+              break;
+            }else {
+              await this.transcode();
+              break;
+            }
+          case 'hevc':
+            if(this.$store.state.videoFormatCheck.hevc){
+              this.hash = res.data.hash;
+              break;
+            }else {
+              await this.transcode();
+              break;
+            }
+          case 'vp9':
+            if(this.$store.state.videoFormatCheck.vp9){
+              this.hash = res.data.hash;
+              break;
+            }else {
+              await this.transcode();
+              break;
+            }
+          case 'vp8':
+            if(this.$store.state.videoFormatCheck.vp8){
+              this.hash = res.data.hash;
+              break;
+            }else {
+              await this.transcode();
+              break;
+            }
+          case 'theora':
+            if(this.$store.state.videoFormatCheck.ogg){
+              this.hash = res.data.hash;
+              break;
+            }else {
+              await this.transcode();
+              break;
+            }
+          case 'mpeg4':
+            if(this.$store.state.videoFormatCheck.mpeg4){
+              this.hash = res.data.hash;
+              break;
+            }else {
+              await this.transcode();
+              break;
+            }
+          default:
+            await this.transcode();
         }
-        });
+
       }
+    },
+    async transcode(){
+      const loading = this.$loading({
+        lock: true,
+        text: '侦测到不支持的解码格式，正在转码，请稍后...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+      await this.$http.get("/file/transcode",{
+        params:{
+          user_id:this.$store.state.user_id,
+          node_id:this.item.node_id,
+        },
+      }).then((data) =>
+      {
+        if(data.data.code === 200){
+          this.hash = data.data.data
+          loading.close();
+        }
+        else if(data.data.code === 457){
+          loading.close();
+          this.onlyOneTranscodeError = true;
+        }
+      }).catch((error) => {
+        if(error.status !== 401) {
+          this.$message.error('转码出现未知问题，请联系Van！ Code:' + error.message);
+        }
+      });
     },
     async getHash(){
       let{data : res}= await this.$http.get("/file/getMd5",{
@@ -441,10 +512,10 @@ export default {
     }
   },
   components:{
+    MoveToDialog,
     RenameDialog,
     Vbotton,
     VueStar,
-    PathFinder,
   },
 
   watch:{
@@ -492,13 +563,8 @@ export default {
   justify-items:center;
   align-items:center;
   transition: all 0.3s ease-in-out;
-/*
-display: flex;
-flex-direction: column;
-justify-content: space-around;
-align-items: center;
 
- */
+
 }
 
 .stage{
@@ -598,7 +664,7 @@ color: white;
 margin: 2px;
 width: 80%;
 text-align: center;
-font-size:0.9em;
+font-size:0.95em;
 overflow: hidden;
 text-overflow: ellipsis;
 -webkit-line-clamp: 3;
@@ -606,7 +672,7 @@ word-break: break-word;
   transition: all 0.3s ease-in-out;
 display: -webkit-box;
 -webkit-box-orient: vertical;
-
+font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
 
 
 
@@ -737,9 +803,7 @@ display: -webkit-box;
 }
 
 .documentBlock .favorite .VueStar__ground .VueStar__icon{
-  color: #737373;
+  color: #565555;
 }
-.errorMsgs{
-  margin-bottom: 10px;
-}
+
 </style>

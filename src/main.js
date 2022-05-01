@@ -20,6 +20,8 @@ import 'video.js/dist/video-js.css'
 import animate from 'animate.css'
 import VueCompositionApi from "@vue/composition-api";
 
+
+
 Vue.use(VueCompositionApi);
 Vue.use(animate);
 Vue.use(contentmenu);

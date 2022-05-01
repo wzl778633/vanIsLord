@@ -3,7 +3,7 @@
       title="上传头像"
       :visible.sync="uploadVisible"
       v-if="uploadVisible"
-      :destroy-on-close = "true"
+      :append-to-body = "true"
       @close = "cancel"
       width="30%">
     <div class = "uploadBody">
@@ -62,7 +62,7 @@ export default {
       dialogImageUrl: '',
       dialogVisible: false,
       islimitReached:false,
-      checkTypeAndSize :true,
+      checkTypeAndSize :false,
       errorPop: false,
     }
   },
@@ -79,6 +79,11 @@ export default {
       this.dialogVisible = true;
     },
     cancel(){
+      this.dialogImageUrl= '';
+      this.dialogVisible= false;
+      this.islimitReached=false;
+      this.checkTypeAndSize =false;
+      this.errorPop= false;
       this.$emit('closeAvatarUpload' );
     },
     async changeAvatar(file){
@@ -95,7 +100,6 @@ export default {
             ).then((data) =>
         {
           if(data.data.code === 200){
-            localStorage.avatar = data.data.data.base64;
             this.$notify(
                 {
                   title: '头像上传成功',
@@ -105,6 +109,7 @@ export default {
                   customClass: "message",
                 }
             );
+            this.$emit("reload")
           }
         }).catch((error) => {
           if(error.status !== 401) {
@@ -185,5 +190,7 @@ export default {
 .pathfinder-error-enter-active{
   animation: shaking .3s linear;
 }
-
+#pathfinderMessage{
+  margin-top: 10px ;
+}
 </style>

@@ -1,8 +1,9 @@
 <template>
     <el-container id="main">
-      <Background id="b"/>
+      <Background2 class="b"/>
       <el-main id="mainPage">
-        <img src="@/assets/imgs/onlyLogo.png" id = "smallLogo"/>
+        <div id = "steal"></div>
+        <img src="@/assets/imgs/onlyLogoBlack.png" id = "smallLogo"/>
         <transition appear
                     appear-class="main-appear"
                     appear-to-class="main-appear-to"
@@ -61,7 +62,7 @@
 import Login from '@/components/Login.vue'
 import Register from '@/components/Register.vue'
 import FrontPageLoader from '@/components/FrontPageLoader.vue'
-import Background from '@/components/Background.vue'
+import Background2 from '@/components/Background2.vue'
 
 export default {
   name: 'Home',
@@ -79,7 +80,7 @@ export default {
     Login,
     Register,
     FrontPageLoader,
-    Background,
+    Background2,
 
   },
   methods:{
@@ -118,21 +119,30 @@ export default {
         this.show = true;
       }
     }
+  },
+  created() {
+    const body = document.querySelector("body");
+    body.style.overflow = "hidden";
+  },
+  beforeDestroy() {
+    const body = document.querySelector("body");
+    body.style.overflow = "visible";
   }
+
 }
 </script>
 <style scoped>
+
 #main{
   width: 100%;
   height: 100%;
   min-height: 850px;
 
-
 }
 
-#b{
+.b{
   position: absolute;
-  z-index: -1;
+  z-index: -3;
 }
 #side{
   overflow: hidden;
@@ -149,6 +159,7 @@ export default {
 
 }
 
+
 @keyframes gradient {
   0% {
     background-position: 0% 50%;
@@ -160,7 +171,23 @@ export default {
     background-position: 0% 50%;
   }
 }
-
+@keyframes rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
 #mainPage{
   width: 100%;
   overflow: hidden;
@@ -169,16 +196,56 @@ export default {
   padding: 0;
 
 }
+
+#steal{
+  position: absolute;
+  width: 35%;
+  height: 60%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background-image: url("../assets/imgs/ccc.gif"),url("../assets/imgs/sparklesBig.gif"),linear-gradient(to right, rgba(17, 7, 12, 0.31) 15%,#06007E3F 20%, #06007E3F 80%, rgba(17, 7, 12, 0.31) 100%);
+  opacity: 1;
+  animation: rotate 15s ease-in-out infinite;
+  filter: brightness(2) contrast(1);
+  background-size: 150% 120%;
+  background-blend-mode: overlay;
+  z-index: -1;
+  mask-image: url("../assets/imgs/onlyLogo.png");
+  mask-size: 100%;
+  mask-repeat: no-repeat;
+  mask-position: center center;
+
+}
 #smallLogo{
   position: absolute;
   width: 35%;
   top: 50%;
   left: 50%;
   transform: translate(-50%,-50%);
-  mask: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-  mask-image: url("@/assets/imgs/onlyLogo.png");
-  filter: drop-shadow(0 0 50px #fff) drop-shadow(-10px 0 80px #f0f) drop-shadow(10px 0 80px #0ff);
+  animation: glowRotate 5s ease-in-out infinite;
+  z-index: -2;
+}
 
+@keyframes glowRotate {
+  0% {
+    filter: drop-shadow(0 0px 10px #4d4a4a) drop-shadow(0px 0 25px #f0f) drop-shadow(0px 0 20px #0ff) hue-rotate(-15deg);
+  }
+  20% {
+    filter: drop-shadow(-5px -5px 15px #4d4a4a) drop-shadow(5px 5px 20px #f0f) drop-shadow(-5px 5px 25px #0ff) hue-rotate(0deg) ;
+  }
+  40% {
+    filter: drop-shadow(5px 5px 20px #4d4a4a) drop-shadow(-5px -5px 15px #f0f) drop-shadow(-5px -5px 30px #0ff) hue-rotate(15deg);
+  }
+  60% {
+    filter: drop-shadow(-5px 5px 20px #4d4a4a) drop-shadow(5px -5px 15px #f0f) drop-shadow(5px 5px 30px #0ff) hue-rotate(15deg);
+  }
+  80% {
+    filter: drop-shadow(5px -5px 15px #4d4a4a) drop-shadow(-5px 5px 20px #f0f) drop-shadow(5px -5px 25px #0ff) hue-rotate(0deg);
+  }
+  100% {
+    filter: drop-shadow(0 0px 10px #4d4a4a) drop-shadow(0px 0 25px #f0f) drop-shadow(0px 0 20px #0ff) hue-rotate(-15deg);
+  }
 }
 #p{
   width: 85%;

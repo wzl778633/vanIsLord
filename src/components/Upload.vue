@@ -3,16 +3,16 @@
     <el-popover
         placement="bottom-start"
         title="上传总进度"
-        width="500"
+        width="700"
         trigger="hover">
-      <el-button size="small" type="primary" class = "popButton" @click = "routeToUpload" round>前往上传页面</el-button>
+      <el-button size="small" type="primary" class = "popButton" @click = "routeToUpload" round>前往上传主页面</el-button>
       <div class= "crossLine"></div>
       <el-progress id = "uploadTotalBar" :text-inside="true" :stroke-width="20" :percentage="totalProgress"  status="success"></el-progress>
       <div class="container">
         <el-table
             :data="uploadingData"
             class = "tmpTable"
-            height="300"
+            height="400"
             empty-text = "暂无正在上传的文件"
             :header-cell-style="center"
             :row-style="{background:'transparent',color:'white'}"
@@ -21,7 +21,7 @@
               label="文件名"
               prop= "name">
             <template v-slot:default="scope">
-              <i :class="'bi-'+ fileType"></i>
+              <i :class="'bi-'+ scope.row.fileType"></i>
               <span style="margin-left: 10px">{{ scope.row.name }}</span>
             </template>
           </el-table-column>
@@ -36,11 +36,26 @@
               width="95">
           </el-table-column>
           <el-table-column
+              label="状态"
+              prop="status"
+              width="95">
+          </el-table-column>
+          <el-table-column
               label="上传进度"
               prop="complete">
             <template v-slot:default="scope">
               <el-progress :text-inside="true" :stroke-width="24" :percentage="scope.row.complete" status="success"></el-progress>
             </template>
+          </el-table-column>
+
+          <el-table-column
+              width="100"
+              align="right">
+          <template v-slot:default="scope">
+            <el-button v-if="!scope.row.isPause && scope.row.status == '正在上传'" size="mini" type="warning" icon="bi-pause" @click = "paused(scope.row.id)" circle></el-button>
+            <el-button v-else-if="scope.row.isPause && scope.row.status == '已暂停'" size="mini" type="success" icon="bi-play" @click = "unPaused(scope.row.id)" circle></el-button>
+            <el-button v-if="scope.row.status !== '准备中..'" size="mini" type="danger" icon="el-icon-close" @click = "abortMission(scope.row.id,scope.row.status)" circle></el-button>
+          </template>
           </el-table-column>
         </el-table>
       </div>
@@ -77,9 +92,9 @@ export default {
   },
   methods:{
     center({row, column, rowIndex, columnIndex}){
-      if(columnIndex !== 3){
+      if(columnIndex !== 4){
         return  {background:'#1e1f26',color:'white'};
-      }else if (columnIndex === 3){
+      }else if (columnIndex === 4){
         return  {background:'#1e1f26',color:'white','text-align' : "center"};
       }
     },
@@ -100,13 +115,13 @@ export default {
   computed: {
     monitor () {
 
-      return this.$store.state.updateState.uploadingFiles;
+      return this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles);
     }
   },
   watch: {
     monitor:{
       handler: function (){
-        this.uploadingData = this.$store.state.updateState.uploadingFiles;
+        this.uploadingData =  this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles);
       },
       //deep:true,
       immediate:true,
@@ -153,12 +168,12 @@ export default {
   margin: 4px;
   right: 0;
   top: 0;
-
+  font-family: "AaGothic (Non-Commercial Use)";
 }
 .container{
   position: relative;
   width: 100%;
-  height: 300px;
+  height: 400px;
 
 }
 

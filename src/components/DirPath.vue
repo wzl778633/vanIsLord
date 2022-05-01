@@ -5,42 +5,15 @@
       <el-breadcrumb-item v-for= "name in pathName" :key = "name.node_id" class = "reshape" :to = "{path:name.file_path}" @click.native = "reload(name)">{{name.file_name}}</el-breadcrumb-item>
       <el-breadcrumb-item class = "reshape" >{{lastElement.file_name}}</el-breadcrumb-item>
     </el-breadcrumb>
-    <Vbotton slot="reference" :clickMethod = "handleClick" :nameForButton = "'新建文件夹'" :isIcon ="true" :iconClass = "'bi-folder-plus'" class = "folderButton" :vStyle = "'rounded'"></Vbotton>
-    <el-dialog
-        title="在当前文件夹中创建新文件夹"
-        :visible.sync="newVisible"
-
-        :destroy-on-close = "true"
-        width="40%">
-      <div class = "uploadBody">
-        <div class = "uploadBlock">
-          <div class="enter inputName">新文件夹的名称: </div>
-          <el-input v-model="fileName" placeholder="请输入新名称" class = "enter" id="fileNameInput"></el-input>
-          <transition name = "newName-error">
-            <el-alert v-show="newNameError"
-                      title="文件夹名不能为空！"
-                      type="error"
-                      show-icon :closable="false" id = "newNameErrorMessage" class="errorMsgs">
-            </el-alert>
-          </transition>
-        </div>
-      </div>
-      <span slot="footer" class="dialog-footer">
-    <el-button @click="close">取 消</el-button>
-    <el-button type="primary" @click="submitUpload">确定新建</el-button>
-    </span>
-    </el-dialog>
   </div>
 </template>
 
 <script>
 import Vbotton from "@/components/V-botton.vue";
-import mixinMethod from "@/assets/methods/checkAndPOP";
 
 
 export default {
   name: "DirPath",
-  mixins:[mixinMethod],
   data(){
     return{
       pathName:[],
@@ -51,47 +24,6 @@ export default {
     }
   },
   methods:{
-    close(){
-      this.newVisible = false;
-    },
-    async submitUpload(){
-      if(this.fileName === ""){
-        this.newNameError = true
-        this.errorDealing(null,"fileNameInput","newNameErrorMessage");
-      }else{
-        await this.$http.post("/file/newdir", {
-          user_id: this.$store.state.user_id,
-          node_id: this.$store.state.node_id,
-          file_name: this.fileName,
-        }).then((data) => {
-              let res = data.data;
-              if (res.code === 200) {
-                this.$notify(
-                    {
-                      title: '新文件夹创建成功',
-                      type: 'success',
-                      message: `已成功创建新文件夹${this.fileName}！`,
-                      position: 'bottom-right',
-                      customClass: "message",
-                    }
-                );
-                this.fileName = "";
-                this.newVisible = false;
-                this.$emit("reload")
-              }
-            }
-        ).catch((error) => {
-          if(error.status !== 401) {
-            this.$message.error('文件夹创建出现未知问题，请联系Van！ Code:' + error.message);
-          }
-        });
-
-      }
-
-    },
-    handleClick(){
-      this.newVisible = true;
-    },
     reload(name){
       this.$emit("dirRedirect", name.file_path);
     },
@@ -131,11 +63,13 @@ export default {
   min-width: max-content;
 }
 .path{
+  max-width: 85vw;
   font-size: 1em;
   margin: 10px;
 }
 .reshape /deep/ .el-breadcrumb__inner{
   color:#F2F6FC;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
 }
 
 /deep/.el-breadcrumb__item:last-child .el-breadcrumb__inner{
@@ -148,27 +82,7 @@ export default {
   cursor: default !important;
 }
 
-.folderButton{
- position: absolute;
- right: 0;
-}
 
-/deep/.folderButton.button-container {
-  width: 205px;
-}
-.folderButton /deep/ #upload {
-  width: 150px;
-  height: 28px;
-}
-/deep/.folderButton.button-container::before {
-  width: 160px;
-  height: 28px;
-}
-.enter{
-  margin-bottom: 15px;
-}
 
-.errorMsgs{
-  margin-bottom: 10px;
-}
+
 </style>
