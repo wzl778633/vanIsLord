@@ -8,7 +8,7 @@
         :stripe = "true"
         :header-cell-style="center"
         :row-style="{background:'transparent',color:'white'}"
-        empty-text = "你没有上传过文件 或 10天内未上传过文件"
+        empty-text = "你没有上传过文件 或 一周内未上传过文件"
     >
       <el-table-column
           label="文件名"
@@ -71,7 +71,7 @@
           <div v-if="!scope.row.isFinished">
             <el-button v-if="!scope.row.isPause && scope.row.status == '正在上传'"  type="warning" icon="bi-pause" @click = "paused(scope.row.id)" circle></el-button>
             <el-button v-else-if="scope.row.isPause && scope.row.status == '已暂停'" type="success" icon="bi-play" @click = "unPaused(scope.row.id)" circle></el-button>
-            <el-button v-if="scope.row.status !== '准备中..'" type="danger" icon="el-icon-close" @click = "abortMission(scope.row.id,scope.row.status)" circle></el-button>
+            <el-button v-if="scope.row.status !== '准备中..' && scope.row.status !== '暂停中..' && scope.row.status !== '中止中..' && scope.row.status !== '少女祈祷中..'" type="danger" icon="el-icon-close" @click = "abortMission(scope.row.id,scope.row.status)" circle></el-button>
           </div>
 
           <div v-else>
@@ -96,8 +96,6 @@ export default {
     return{
       search:"",
       tableData:[],
-
-
     }
   },
   methods:{
@@ -142,13 +140,13 @@ export default {
   },
   computed: {
     monitor () {
-      return this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles).concat(this.$store.state.updateState.uploadedFiles);
+      return this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles).concat(this.$store.state.updateState.uploadedFiles);
     },
   },
   watch: {
     monitor:{
       handler: function (){
-        this.tableData = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles).concat(this.$store.state.updateState.uploadedFiles);
+        this.tableData = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles).concat(this.$store.state.updateState.uploadedFiles);
       },
       //deep:true,
       immediate:true,
@@ -161,7 +159,7 @@ export default {
       className: 'os-theme-thick-light',
       scrollbars: { autoHide : "none",},
     });
-    this.tableData = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles).concat(this.$store.state.updateState.uploadedFiles);
+    this.tableData = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles).concat(this.$store.state.updateState.uploadedFiles);
   },
 
 }
@@ -185,7 +183,7 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
-  min-height: 600px;
+  min-height: 550px;
 }
 /deep/ .el-input__inner {
   background-color: rgba(255, 255, 255, 0.247);

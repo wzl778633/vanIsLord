@@ -28,7 +28,7 @@ export default {
   },
   created() {
     window.onbeforeunload = () => {
-      let x = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles);
+      let x = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles);
       if(x.length != 0){
         return "handle your events or msgs here";
       }
@@ -97,8 +97,8 @@ export default {
 
 <style>
 #app{
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 }
  #uploadTotalBar.el-progress .el-progress-bar__inner{
    background: linear-gradient(-30deg, #00B3CC, #ED7B84,  #9055FF, #6699FF);

@@ -2,7 +2,7 @@
     <!--transition-group name = "mainDev" class = "document" tag = "ul"-->
 <div id ="ccc">
 <ul class = "document">
-  <li v-for="item in itemList" v-bind:key = "item.node_id">
+  <li v-for="item in itemList.filter(data => !this.$store.state.searchStr || data.file_name.toLowerCase().includes(this.$store.state.searchStr.toLowerCase()))" v-bind:key = "item.node_id">
     <Document :item = "item" @needRedirect = "passThough" @reload = "reload" :ref="item.node_id" v-contextmenu:contextmenu></Document>
   </li>
 </ul>

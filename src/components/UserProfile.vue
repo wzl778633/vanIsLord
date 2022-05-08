@@ -1,6 +1,7 @@
 <template>
 <div id="userProfileStage">
   <transition name = "divExchange" type = "transition">
+    <keep-alive>
   <div v-if = "ifRemove" id = "userProfile">
     <div class = "innerUserProfile">
       <div class="AlluserInfo">
@@ -30,9 +31,12 @@
       </el-dialog>
     </div>
   </div>
+    </keep-alive>
   </transition>
   <transition name = "exchange" type = "transition">
+    <keep-alive>
     <div key="needToShow" v-if = "ifRemove" @click = "remove" id = "background"></div>
+    </keep-alive>
   </transition>
   <AvatarUploudDialog :isOpen = "openAvatar" @closeAvatarUpload = "closeAvatarDialog" @reload = "reload"></AvatarUploudDialog>
   <PasswordChangeDialog :isOpen = "openPassword" @closePasswordChange = "closePasswordDialog" @closePasswordChangeWithS = "closePasswordDialogWithS"></PasswordChangeDialog>
@@ -58,9 +62,11 @@ export default {
       email:"",
       actualSize:[],
       size:[],
+      timeThatChange:Date.now(),
       openAvatar:false,
       openPassword:false,
-      touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
+      //touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
+      touXiangsrc : `https://aijiangsb.com:9070/api/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
       openExit:false,
       ifFinishedLoading:false,
       refresh:true,
@@ -68,9 +74,11 @@ export default {
   },
   methods:{
     reload(){
+      this.timeThatChange = Date.now();
       this.touXiangsrc = ""
       this.$nextTick(function() {
-        this.touXiangsrc = `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`;
+        //this.touXiangsrc = `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`;
+        this.touXiangsrc = `https://aijiangsb.com:9070/api/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${this.timeThatChange}`;
       })
       this.$emit("reloadAvatar")
     },
@@ -155,6 +163,7 @@ export default {
     });
   },
   created() {
+    //this.touXiangsrc = `https://aijiangsb.com:9070/api/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${this.timeThatChange}`;
     this.$http.post("/user/profile",{
       user_id:this.$store.state.user_id,
     }).then((data)=>{

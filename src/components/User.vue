@@ -17,7 +17,9 @@ export default {
   props:["isMainCollapse"],
   data(){
     return{
-      touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
+      timeThatChange:Date.now(),
+      //touXiangsrc : `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
+      touXiangsrc : `https://aijiangsb.com:9070/api/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`,
       userName : "ZiningDadi",
       fitMode : "cover",
       imgSize : 60,
@@ -29,13 +31,16 @@ export default {
      this.$emit("openUser")
     },
     refreshAvatar(){
+      this.timeThatChange = Date.now();
       this.touXiangsrc = ""
       this.$nextTick(function() {
-        this.touXiangsrc = `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`;
+        //this.touXiangsrc = `http://192.168.1.143:9090/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${Date.now()}`;
+        this.touXiangsrc = `https://aijiangsb.com:9070/api/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${this.timeThatChange}`;
       })
     }
   },
   created() {
+    //this.touXiangsrc = `https://aijiangsb.com:9070/api/vavatar/${this.$store.state.user_id}?token=${localStorage.loginToken}&time=${this.timeThatChange}`;
     this.userName = "你好, " + this.$store.state.user_name;
   },
 

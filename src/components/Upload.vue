@@ -54,7 +54,7 @@
           <template v-slot:default="scope">
             <el-button v-if="!scope.row.isPause && scope.row.status == '正在上传'" size="mini" type="warning" icon="bi-pause" @click = "paused(scope.row.id)" circle></el-button>
             <el-button v-else-if="scope.row.isPause && scope.row.status == '已暂停'" size="mini" type="success" icon="bi-play" @click = "unPaused(scope.row.id)" circle></el-button>
-            <el-button v-if="scope.row.status !== '准备中..'" size="mini" type="danger" icon="el-icon-close" @click = "abortMission(scope.row.id,scope.row.status)" circle></el-button>
+            <el-button v-if="scope.row.status !== '准备中..' && scope.row.status !== '暂停中..' && scope.row.status !== '中止中..' && scope.row.status !== '少女祈祷中..'" size="mini" type="danger" icon="el-icon-close" @click = "abortMission(scope.row.id,scope.row.status)" circle></el-button>
           </template>
           </el-table-column>
         </el-table>
@@ -115,13 +115,13 @@ export default {
   computed: {
     monitor () {
 
-      return this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles);
+      return this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles);
     }
   },
   watch: {
     monitor:{
       handler: function (){
-        this.uploadingData =  this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.waitingFiles);
+        this.uploadingData =  this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles);
       },
       //deep:true,
       immediate:true,

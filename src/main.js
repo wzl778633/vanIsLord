@@ -17,13 +17,12 @@ import { OverlayScrollbarsPlugin } from 'overlayscrollbars-vue';
 import contentmenu from 'v-contextmenu';
 import 'v-contextmenu/dist/index.css';
 import 'video.js/dist/video-js.css'
-import animate from 'animate.css'
+import 'animate.css';
 import VueCompositionApi from "@vue/composition-api";
 
 
 
 Vue.use(VueCompositionApi);
-Vue.use(animate);
 Vue.use(contentmenu);
 Vue.use(ElementUI);
 Vue.use(OverlayScrollbarsPlugin);
@@ -61,7 +60,7 @@ axios.interceptors.response.use(res => {return res;},error => {
     }
 );
 
-    Vue.prototype.$http = axios;
+Vue.prototype.$http = axios;
 
 Vue.config.productionTip = false
 

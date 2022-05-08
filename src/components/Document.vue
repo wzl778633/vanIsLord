@@ -22,7 +22,7 @@
       <svg v-if="isNotImage" class="icon bi" width="60%" height="60%" :fill="color" :id = "'s'+item.node_id">
         <use :xlink:href="require('/node_modules/bootstrap-icons/bootstrap-icons.svg')+'#' + item.content_type"></use>
       </svg>
-      <img v-else :id = "'s'+item.node_id" :src="imgSrc" style="width: 95%; height: auto; object-fit:contain" >
+      <img v-else :id = "'ss'+item.node_id" :src="imgSrc" style="width: 95%; height: auto; max-height: 100%; object-fit:contain" >
     </div>
     <div class = "showDialogInfoStage">
       <div class = "showDialogInfoBlock"></div>
@@ -43,20 +43,22 @@
       </div>
     </div>
   </el-dialog>
+
   <el-dialog
       :title="item.file_name"
       top = "2vh"
       :visible.sync="openDialogVisible"
+      @close = "imageClose"
       v-if="openDialogVisible"
       :append-to-body = "true"
       custom-class = "showData"
       width="80%">
     <div id = "openDialogStage">
-      <video v-if = "item.content_type == 'film'" :src="liveSrc" controls autoplay class ="openedInnerBlock"></video>
-      <iframe v-else-if="item.content_type == 'filetype-pdf'" :src="liveSrc" class ="openedInnerBlock text"></iframe>
-      <iframe v-else-if="item.content_type == 'filetype-txt'" :src="liveSrc" class ="openedInnerBlock text" ></iframe>
-      <audio v-else-if= "item.content_type == 'music-note-beamed'" :src="liveSrc"  controls autoplay class ="openedInnerBlock music"></audio>
-      <img v-else-if= "item.content_type == 'image'" :src="liveSrc" alt="opened picture" class ="openedInnerBlock image">
+      <video v-if = "item.content_type === 'film'" :src="liveSrc" controls autoplay class ="openedInnerBlock video"></video>
+      <iframe v-else-if="item.content_type === 'filetype-pdf'" :src="liveSrc" class ="openedInnerBlock text"></iframe>
+      <iframe v-else-if="item.content_type === 'filetype-txt'" :src="liveSrc" class ="openedInnerBlock text" ></iframe>
+      <audio v-else-if= "item.content_type === 'music-note-beamed'" :src="liveSrc"  controls autoplay class ="openedInnerBlock music"></audio>
+      <img v-else-if= "item.content_type === 'image'" :src="liveSrc" alt="opened picture" class ="openedInnerBlock image">
     </div>
   </el-dialog>
 
@@ -89,12 +91,12 @@ export default {
       imgSrc:"",
       liveSrc : "",
       hash:"",
-      fullscreenLoading : false,
       renameVisible:false,
       moveVisible:false,
       onlyOneTranscodeError: false,
       realData:{},
       notCheckYet : true,
+      timer:null,
     }
   },
   created() {
@@ -146,7 +148,8 @@ export default {
         break;
       case "image":
         this.color = "#d57bff";
-        const suffix = /\.([0-9A-z]+)$/i.exec(this.item.file_name)[1];
+        let suffix = /\.([0-9A-z]+)$/i.exec(this.item.file_name)[1];
+        suffix = suffix.toLowerCase();
         if(this.item.base64){
           if(suffix == "png"){
             this.isNotImage = false;
@@ -181,6 +184,15 @@ export default {
   },
 
   methods: {
+    imageClose(){
+      if(!this.isNotImage && this.liveSrc !== ""){
+        this.timer = setTimeout(()=> {
+          window.URL.revokeObjectURL(this.liveSrc);
+          this.liveSrc = "";
+        },1800000);
+      }
+      this.openDialogVisible = false;
+    },
     reload() {
       this.$emit("reload");
     },
@@ -281,10 +293,20 @@ export default {
         );
       });
     },
-    async changeDialog(){
+   async changeDialog(){
       if(this.item.content_type == "film"||this.item.content_type == "image"||this.item.content_type == "filetype-pdf"||this.item.content_type == "music-note-beamed"||this.item.content_type == "filetype-txt"){
-        if(this.item.content_type == "image"){
-          await this.downloadRequest();
+        const loading = this.$loading({
+          lock: true,
+          text: '正在加载，请稍后...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+        if(!this.isNotImage){
+          clearTimeout(this.timer)
+          if(!this.liveSrc){
+            await this.downloadRequest();
+          }
+          loading.close();
           this.dialogVisible = false;
           this.openDialogVisible = true;
         }
@@ -300,7 +322,9 @@ export default {
             });
             this.onlyOneTranscodeError = false;
           }
-          this.liveSrc = `http://192.168.1.143:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
+          this.liveSrc = `https://aijiangsb.com:9070/api/vopen/${this.hash}?token=${localStorage.loginToken}`;
+          //this.liveSrc = `http://192.168.1.143:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
+          loading.close();
           this.dialogVisible = false;
           this.openDialogVisible = true;
         }
@@ -384,12 +408,13 @@ export default {
             responseType: 'blob',
             headers:{
               "Range": "bytes=0-",
+              "Cache-control":"max-age=3600",
             }
           }
 
       ).then((data) => {
-        let blobUrl = window.URL.createObjectURL(data.data);
-        this.liveSrc = blobUrl;
+        //createObjectURL返回一段带hash的url，并且一直存储在内存中，直到document触发了unload事件
+        this.liveSrc = window.URL.createObjectURL(data.data);
       });
 
     },
@@ -466,7 +491,9 @@ export default {
     async transcode(){
       const loading = this.$loading({
         lock: true,
-        text: '侦测到不支持的解码格式，正在转码，请稍后...',
+        text: '侦测到不支持的解码格式，正在转码中.. ' +
+            ' 当然你也可以选择刷新，现在打开的视频依旧会在后台继续转码，届时即可观看！ '
+            + ' 注意！在后台一次只能有一个转码任务！',
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       });
@@ -486,6 +513,7 @@ export default {
           this.onlyOneTranscodeError = true;
         }
       }).catch((error) => {
+        loading.close();
         if(error.status !== 401) {
           this.$message.error('转码出现未知问题，请联系Van！ Code:' + error.message);
         }
@@ -507,7 +535,9 @@ export default {
         await this.getHash();
         const a = document.createElement('a');
         a.download = `nmsl + ${this.item.file_name}`;
-        a.href = `http://192.168.1.143:9090/vdownload/${this.hash}?token=${localStorage.loginToken}`;
+        a.href = `https://aijiangsb.com:9070/api/vdownload/${this.hash}?token=${localStorage.loginToken}`;
+      //a.href = `http://192.168.1.143:9090/vdownload/${this.hash}?token=${localStorage.loginToken}`;
+
         a.click();
     }
   },
@@ -530,7 +560,7 @@ export default {
           this.$refs.vueStar.$data.toggleColor = false;
         }
       },
-    }
+    },
   }
 
 }
@@ -700,15 +730,19 @@ font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Mi
   width: 100%;
   height: auto;
 }
+.openedInnerBlock.video{
+  max-height: 80vh;
+}
 
 .openedInnerBlock.image{
+  max-height: 80vh;
   object-fit: contain;
 }
 .openedInnerBlock.music{
   height: 100px;
 }
 .openedInnerBlock.text{
-  height: 800px;
+  height: 100vh;
   background-color: white;
 }
 

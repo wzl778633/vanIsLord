@@ -6,18 +6,12 @@ import MainPart from '../components/MainPart.vue'
 import ShowPart from '../components/ShowPart.vue'
 import Error from '../views/ErrorPage.vue'
 import UploadPage from '../views/UploadPage.vue'
+
 import { Notification } from 'element-ui';
 Vue.use(VueRouter)
 
 const routes = [
-  {
-    path: '/404error',
-    name: 'Error',
-    component: Error,
-    meta: {
-      isLogin: false
-    }
-  },
+
   {
     path: '/',
     name: 'LoginPage',
@@ -42,6 +36,14 @@ const routes = [
     meta: {
       isLogin: true
     },
+  },
+  {
+    path: '*',
+    name: 'Error',
+    component: Error,
+    meta: {
+      isLogin: false
+    }
   },
 ]
 

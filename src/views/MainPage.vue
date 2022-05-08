@@ -43,7 +43,7 @@
           </el-menu-item>
         </el-menu>
       <el-main class="frame main">
-          <ToolBar @reload = "reload" :isDisk = "isDisk" :isDiskOrUpload = "isDiskOrUpload"></ToolBar>
+          <ToolBar @reload = "reload" :isUpload = "isUpload" :isDisk = "isDisk" :isDiskOrUpload = "isDiskOrUpload" ref="toolBar"></ToolBar>
           <div v-if="isDiskOrUpload" class = "shameShadow"></div>
           <router-view v-if="isRouterAlive" @reload = "reload" ></router-view>
       </el-main>
@@ -53,6 +53,7 @@
     <UserProfile :ifRemove = "isUserOpen" @closeUser = "closeUserProfile" @reloadAvatar = "reloadAvatar"></UserProfile>
     <User :isMainCollapse = "isCollapse" class = "currentUser" @openUser = "openUserProfile" ref="user"></User>
     <v-pull-button :class = "!isCollapse ? 'mainPagePullButton' : 'mainPagePullButton hide' " :isHide = "isCollapse" @switchCollapse = "handleCollapse"></v-pull-button>
+    <Announcement class = "announcement"></Announcement>
   </el-container>
 </template>
 
@@ -64,6 +65,7 @@ import ToolBar from "@/views/ToolBar";
 import UserProfile from "@/components/UserProfile";
 import VPullButton from "@/components/V-pullButton";
 import TotalSpaceBar from "@/components/TotalSpaceBar";
+import Announcement from "@/components/Announcement";
 
 export default {
 
@@ -87,6 +89,7 @@ export default {
       routeToDiskLove:"/mainpage/my_favorite",
       routeToDiskBT:"/mainpage/my_torrent",
       isDisk:false,
+      isUpload:false,
       isDiskOrUpload:false,
       api:"",
     }
@@ -132,6 +135,7 @@ export default {
 
   },
   components:{
+    Announcement,
     TotalSpaceBar,
     VPullButton,
     UserProfile,
@@ -188,12 +192,15 @@ export default {
         if(val.includes("/mainpage/disk")){
           this.isDiskOrUpload = true;
           this.isDisk = true;
+          this.isUpload = false;
         }else if(val.includes("/mainpage/upload")){
           this.isDiskOrUpload = true;
+          this.isUpload = true;
           this.isDisk = false;
         }
         else {
           this.isDiskOrUpload = false;
+          this.isUpload = false;
           this.isDisk = false;
         }
       },
@@ -209,7 +216,7 @@ export default {
   min-width: max-content;
   position: relative;
   height: 100%;
-  min-height: 750px;
+  min-height: 700px;
   background: linear-gradient(to right,#1e1f26 25%,black 100%);
 
 }
@@ -339,9 +346,13 @@ export default {
 
 .frame.aside:not(.el-menu--collapse) {
   width: 220px;
-  min-height: 600px;
+  min-height: 550px;
 }
-
+.announcement{
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+}
 .mainPagePullButton{
   position: absolute;
   left: 160px;

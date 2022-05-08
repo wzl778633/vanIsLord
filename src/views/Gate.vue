@@ -105,6 +105,7 @@ export default {
       this.defaultUserName = account;
       this.defaultEmailName = email;
       this.logComponents = Login;
+      this.show = true;
     },
     changeComponents(event){
       if(this.logComponents === Login){
@@ -121,13 +122,8 @@ export default {
     }
   },
   created() {
-    const body = document.querySelector("body");
-    body.style.overflow = "hidden";
   },
-  beforeDestroy() {
-    const body = document.querySelector("body");
-    body.style.overflow = "visible";
-  }
+
 
 }
 </script>
@@ -136,7 +132,7 @@ export default {
 #main{
   width: 100%;
   height: 100%;
-  min-height: 850px;
+  min-height: 550px;
 
 }
 
@@ -149,8 +145,9 @@ export default {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
+  justify-content: space-around;
   align-items: center;
-  min-height: 850px;
+  min-height: 550px;
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
@@ -259,30 +256,23 @@ export default {
 
 }
 .container{
-  display: flex;
-  justify-content: center;
-  align-items: center;
 
 }
 #c1{
-
-  flex-grow: 0.75;
+  box-sizing: border-box;
+  width: 80%;
+  height: auto;
+  text-align: center;
 }
 
 #c2{
-  flex-grow: 2.5;
-
 }
-
 #cc{
-
-  flex-grow: 1;
+  flex-grow: 0.3;
 }
 #logo{
-  width: 400px;
-  height: auto;
-  flex-shrink: 0.5;
-
+  width: 100%;
+  height: 100%;
 }
 .inner{
   color: white !important;

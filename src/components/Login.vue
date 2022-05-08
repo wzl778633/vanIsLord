@@ -107,74 +107,53 @@ export default {
     },
     async login(event) {
       let input = {};
-      if(this.isNameOrEmail){
-        input = {
-          method:'POST',
-          mode:'cors',
-          cache:"default",
-          credentials:"include",
-          headers:{
-            'Origin':"http://192.168.1.169:9070",
-            'Content-Type': 'application/json'
-          },
-          redirect:"follow",
-          referrerPolicy:'same-origin',
-          body:JSON.stringify({user: this.account, user_pwd:this.password})
-        };
-      }else{
-        input = {
-          method:'POST',
-          mode:'cors',
-          cache:"default",
-          credentials:"include",
-          headers:{
-            'Origin':"http://192.168.1.169:9070",
-            'Content-Type': 'application/json'
-          },
-          redirect:"follow",
-          referrerPolicy:'same-origin',
-          body:JSON.stringify({user: this.email, user_pwd:this.password})
-        };
+      this.checkAvailable()
+      if(!this.isNameOrEmail){
+        this.emailCheck(event)
       }
-      const response = await fetch("http://192.168.1.143:9090/user/login",input);
-      let loginData;
-      response.json().then((data)=> {
-        loginData = data;
-      if(loginData.code == "200"){
-        console.log("登录成功");
-        this.isLogin = false;
-
-        this.$store.commit("determineUserID",loginData.data.user_id);
-        this.$store.commit("determineUserName",loginData.data.user_name);
-        this.$store.commit("initial",loginData.data.content);
-        let path = `/${loginData.data.user_name}`;
-        this.$store.commit("updatePath","/mainpage/disk" + path);
-
-        localStorage.loginToken = loginData.data.token;
-        if(loginData.data.base64){
-          localStorage.avatar = loginData.data.base64;
+      if(!this.passwordError && !this.emailFormatError) {
+        if (this.isNameOrEmail) {
+          input = {
+            user: this.account, user_pwd: this.password
+          };
+        } else {
+          input = {
+            user: this.email, user_pwd: this.password
+          };
         }
+        let loginData;
+        //const response = await fetch("http://192.168.1.143:9090/user/login", input);
+        await this.$http.post("/user/login", input).then((data) => {
+          loginData = data.data;
+          if (loginData.code == "200") {
+            this.isLogin = false;
+            this.$store.commit("determineUserID", loginData.data.user_id);
+            this.$store.commit("determineUserName", loginData.data.user_name);
+            this.$store.commit("initial", loginData.data.content);
+            let path = `/${loginData.data.user_name}`;
+            this.$store.commit("updatePath", "/mainpage/disk" + path);
 
-        this.$router.push("/mainpage/disk" + path);
-      } else {
-        console.log("登录失败");
-        if(this.postReturnError){
-          this.shakingAnime(document.getElementById("postMessage"));
-        }
-        else{
-          this.postReturnError = true
-        }
+            localStorage.loginToken = loginData.data.token;
+
+            this.$router.push("/mainpage/disk" + path);
+          } else {
+            console.log("登录失败");
+            if (this.postReturnError) {
+              this.shakingAnime(document.getElementById("postMessage"));
+            } else {
+              this.postReturnError = true
+            }
+
+          }
+
+        }).catch((error) => {
+          if (error.status !== 401) {
+            this.$message.error('登录出现未知问题，请联系Van！ Code:' + error.message);
+          }
+
+        });
 
       }
-
-      }).catch((error) => {
-        if(error.status !== 401) {
-          this.$message.error('登录出现未知问题，请联系Van！ Code:' + error.message);
-        }
-
-      });
-
-
 
 
     },
@@ -192,6 +171,7 @@ export default {
 
 <style scoped>
 @import "../css/global.css";
+
 .loginCard{
   width: 450px;
 }

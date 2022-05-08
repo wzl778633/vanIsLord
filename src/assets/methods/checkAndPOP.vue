@@ -54,6 +54,17 @@ export default {
       }
     },
 
+    checkCodeName(event,inputID,errorMsgID){
+      let pattern = "621496049";
+      if(this.codeName !== pattern){
+        this.errorDealing(event,inputID,errorMsgID);
+        return true;
+      }else{
+        this.recover(event,inputID,errorMsgID);
+        return false;
+      }
+    },
+
 errorDealing(event,inputID,errorMsgID){
   if(document.getElementById(errorMsgID)){
     let errMsg = document.getElementById(errorMsgID);

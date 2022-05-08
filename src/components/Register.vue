@@ -1,7 +1,9 @@
 <template>
+
   <div class="register">
     <el-card class = "loginCard">
       <div slot="header" class="title">注册</div>
+      <overlay-scrollbars  :options = "defaultStyle" id = "register">
       <div class = "inside">
         <div v-if="isRegisted">
           <div class="enter inputName">Account 账户名: </div>
@@ -15,7 +17,7 @@
           </transition>
 
           <div class="enter inputName">Password 密码: </div>
-          <el-input v-model="password" placeholder="密码必须为六位且至少包含至少一个大写字母，一个小写字母，一个数字，与一个特殊字符" show-password class = "enter" @keyup.enter.native= "register" @blur = "checkAvailable" id = "passwordText" ></el-input>
+          <el-input v-model="password" placeholder="六位以上/至少一个大写字母 小写字母 数字 特殊字符" show-password class = "enter" @keyup.enter.native= "register" @blur = "checkAvailable" id = "passwordText" ></el-input>
           <transition name = "password-error">
             <el-alert v-show="passwordError"
                       title="密码必须包含至少一个大写字母，一个小写字母，一个数字，与一个特殊字符"
@@ -51,18 +53,31 @@
             </el-alert>
           </transition>
 
-          <div class="enter inputName">CodeName 暗号（disabled）: </div>
-          <el-input v-model="codeName" placeholder="输入不正确的暗号会被拒绝注册" @keyup.enter.native= "register" class = "enter"></el-input>
+
+          <div class="enter inputName">CodeName 暗号: </div>
+          <el-input v-model="codeName" placeholder="输入不正确的暗号会被拒绝注册" @keyup.enter.native= "register" class = "enter" id = "codeTextInput" @blur="checkCodeCurr"></el-input>
+          <transition name = "password-error">
+            <el-alert v-show="codeFormatError"
+                      title="Nope! 暗号不对，你是间谍，滚犊子！"
+                      type="error"
+                      show-icon :closable="false" id = "codeFormatErrorMessage" class="errorMsgs">
+            </el-alert>
+          </transition>
+
+
           <el-button type="primary" class = "enter bot" @keyup.enter.native= "register" @click = "register">Welcome to VanIsLord！</el-button>
         </div>
         <div v-else style="text-align: center">
-          <el-result icon="success" title="注册成功" subTitle="您已名列VanIsLord平台之中，请务必遵守Van的条例">
+          <el-result icon="success" title="注册成功" subTitle="您已名列VanIsLord名单之中，请务必遵守Van的条例">
           </el-result>
           <el-button type="primary" round @click = "backToLogin">我要登录！</el-button>
         </div>
+
       </div>
+      </overlay-scrollbars>
     </el-card>
   </div>
+
 </template>
 
 <script>
@@ -85,7 +100,16 @@ export default {
       userNamePasswordError:false,
       emailPasswordError:false,
       emailFormatError:false,
+      codeFormatError:false,
       isRegisted: true,
+      defaultStyle: {
+
+        overflowBehavior : {
+          x : "hidden",
+        },
+        scrollbars: { autoHide : "leave",},
+
+      }
     }
 
   },
@@ -103,6 +127,7 @@ export default {
         this.userNamePasswordError = false;
         this.emailPasswordError = false;
         this.emailFormatError = false;
+        this.codeFormatError = false;
         this.passwordError = flag;
       } else {
         this.passwordError = flag;
@@ -118,6 +143,7 @@ export default {
         this.userNamePasswordError = false;
         this.emailPasswordError = false;
         this.emailFormatError = false;
+        this.codeFormatError = false;
         this.rePasswordError = flag;
       } else {
         this.rePasswordError = flag;
@@ -131,67 +157,94 @@ export default {
         this.rePasswordError = false;
         this.userNamePasswordError = false;
         this.emailPasswordError = false;
+        this.codeFormatError = false;
         this.emailFormatError = flag;
       } else {
         this.emailFormatError = flag;
       }
     },
 
+    checkCodeCurr(){
+      let flag =  this.checkCodeName(null,"codeTextInput","codeFormatErrorMessage");
+      if (flag) {
+        this.passwordError = false;
+        this.rePasswordError = false;
+        this.userNamePasswordError = false;
+        this.emailPasswordError = false;
+        this.emailFormatError = false;
+        this.codeFormatError = flag;
+      } else {
+        this.codeFormatError = flag;
+      }
+    },
     backToLogin(){
       this.isRegisted = true;
       this.$emit("registFinished",this.account,this.email);
+      this.account = "";
+      this.password= "";
+      this.rePassword= "";
+      this.email="";
+      this.codeName= "";
     },
 
     async register(event) {
-      const response = await fetch("http://192.168.1.143:9090/user/signin", {
-        method: 'POST',
-        mode: 'cors',
-        cache: "default",
-        credentials: "include",
-        headers: {
-          'Origin': "http://192.168.1.169:9070",
-          'Content-Type': 'application/json'
-        },
-        redirect: "follow",
-        referrerPolicy: 'same-origin',
-        body: JSON.stringify({user_name: this.account, user_email: this.email, user_pwd: this.password})
-      });
-      let loginData;
-      response.json().then((data) => {
-        loginData = data
-        if (loginData.code == "200") {
-          console.log("注册成功");
-          this.isRegisted = false;
-        } else if (loginData.code == "404") {
-          console.log("注册失败 用户名");
-          if (this.userNamePasswordError) {
-            this.shakingAnime(document.getElementById("userNameErrorMessage"));
-          } else {
+      this.checkAvailable(event);
+      this.checkEmailFormat();
+      this.checkSame();
+      this.checkCodeCurr();
+
+      if (!this.codeFormatError && !this.passwordError && !this.rePasswordError && !this.emailFormatError) {
+        let loginData;
+        //const response = await fetch("http://192.168.1.143:9090/user/signin", {
+        await this.$http.post("/user/signin", {
+              user_name: this.account,
+              user_email: this.email,
+              user_pwd: this.password
+        }
+        ).then((data) => {
+          loginData = data.data
+          if (loginData.code == "200") {
+            console.log("注册成功");
             this.passwordError = false;
             this.rePasswordError = false;
             this.emailPasswordError = false;
             this.emailFormatError = false;
-            this.userNamePasswordError = true;
-          }
-
-        } else if (loginData.code == "405") {
-          console.log("注册失败 用户名");
-          if (this.emailPasswordError) {
-            this.shakingAnime(document.getElementById("sameEmailErrorMessage"));
-          } else {
-            this.passwordError = false;
-            this.rePasswordError = false;
-            this.emailFormatError = false;
+            this.codeFormatError = false;
             this.userNamePasswordError = false;
-            this.emailPasswordError = true;
-          }
+            this.isRegisted = false;
+          } else if (loginData.code == "404") {
+            console.log("注册失败 用户名");
+            if (this.userNamePasswordError) {
+              this.shakingAnime(document.getElementById("userNameErrorMessage"));
+            } else {
+              this.passwordError = false;
+              this.rePasswordError = false;
+              this.emailPasswordError = false;
+              this.emailFormatError = false;
+              this.codeFormatError = false;
+                this.userNamePasswordError = true;
+            }
 
-        }
-      }).catch((error) => {
-        if(error.status !== 401) {
-          this.$message.error('注册出现未知问题，请联系Van！ Code:' + error.message);
-        }
-      });
+          } else if (loginData.code == "405") {
+            console.log("注册失败 邮箱");
+            if (this.emailPasswordError) {
+              this.shakingAnime(document.getElementById("sameEmailErrorMessage"));
+            } else {
+              this.passwordError = false;
+              this.rePasswordError = false;
+              this.emailFormatError = false;
+              this.userNamePasswordError = false;
+                this.emailPasswordError = true;
+              this.codeFormatError = false;
+            }
+
+          }
+        }).catch((error) => {
+          if (error.status !== 401) {
+            this.$message.error('注册出现未知问题，请联系Van！ Code:' + error.message);
+          }
+        });
+      }
     }
   }
 }
@@ -203,6 +256,18 @@ export default {
 
 @import "../css/global.css";
 
+#register{
+
+height: 56.6vh;
+max-height: max-content;
+box-sizing: border-box;
+padding: 10px;
+
+}
+.register{
+  width: 450px;
+
+}
 .loginCard{
   width: 450px;
 
@@ -211,9 +276,7 @@ export default {
   font-size: 14px;
 }
 
-.inputName {
-  /*border: 1px solid black;*/
-}
+
 
 .enter{
   margin-bottom: 15px;
