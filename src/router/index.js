@@ -2,12 +2,16 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import LoginPage from '../views/Gate.vue'
 import MainPage from '../views/MainPage.vue'
-import MainPart from '../components/MainPart.vue'
-import ShowPart from '../components/ShowPart.vue'
+import MainPart from '../views/MainPart.vue'
+import ShowPart from '../views/ShowPart.vue'
 import Error from '../views/ErrorPage.vue'
 import UploadPage from '../views/UploadPage.vue'
+import ChatRoom from "../views/ChatRoom";
 
 import { Notification } from 'element-ui';
+import PiazzaHomePage from "@/views/PiazzaHomePage";
+import PiazzaPart from "@/views/PiazzaPart";
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -30,8 +34,18 @@ const routes = [
       {path : 'my_picture', component: ShowPart,},
       {path : 'my_video', component: ShowPart,},
       {path : 'my_favorite', component: ShowPart,},
-      {path : 'my_torrent', component: ShowPart,},
+      {path : 'my_share', component: ShowPart,},
       {path : 'my_music', component: ShowPart,},
+      {path : 'piazza', component: PiazzaHomePage,},
+      {path : 'shareAll/picture:union', component: ShowPart},
+      {path : 'shareAll/video:union', component: ShowPart},
+      {path : 'shareAll/music:union', component: ShowPart},
+      {path : 'shareAll/:path+', component: PiazzaPart},
+      {path : 'shareUser/:path/picture:union', component: ShowPart},
+      {path : 'shareUser/:path/video:union', component: ShowPart},
+      {path : 'shareUser/:path/music:union', component: ShowPart},
+      {path : 'shareUser/:path+', component: PiazzaPart},
+      {path : 'clipboard', component: ChatRoom,},
     ],
     meta: {
       isLogin: true

@@ -190,17 +190,23 @@ export default {
   color: white;
 }
 
-#uploadTable >>> .el-table--enable-row-hover .el-table__body tr:hover>td {
-  background-color: #A85DC3;
 
-}
 
 #uploadTable >>> .el-table th.gutter{   /*解决el-table加了gutter后 边框出现白边*/
   background:#444857;
 }
 
 #uploadTable >>> .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell{
-  background: #34343f;
+  background-color: #34343f;
+}
+
+#uploadTable >>> .el-table--enable-row-hover .el-table__body tr:hover>td {
+  background-color: #A85DC3;
+
+}
+#uploadTable >>> .el-table--enable-row-hover .el-table__body tr.el-table__row--striped:hover>td.el-table__cell {
+  background-color: #A85DC3;
+
 }
 #uploadTable >>> .el-table__row>td,#uploadTable >>>  .el-table th.is-leaf{
   border: none;

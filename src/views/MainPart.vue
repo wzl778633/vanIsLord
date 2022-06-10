@@ -1,24 +1,20 @@
 <template>
   <div class = "mainShell" >
     <DirPath  @dirRedirect = "decode" @reload = "reloadPass"></DirPath>
-    <!--ul class = "document"-->
-
+    <FakeHeader v-if = "isList" @sortByName = "sortBy(0)" @sortByTime = "sortBy(1)" @sortBySize = "sortBy(2)" :nameState = "nameCounter" :sizeState = "sizeCounter" :timeState = "timeCounter"></FakeHeader>
 
     <div class = "dragAble" @dragenter = "handleDropEvent"  @dragover = "handleDropOver">
-    <overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 150px); box-sizing: border-box;
-  padding: 20px;">
-
+    <!--overlay-scrollbars  :options = "defaultStyle" style=" width: 100%; height:calc(100vh - 150px); box-sizing: border-box; padding: 20px;">
         <DocumentList id = "dList" :itemList="items" @pass = "decode" @reload = "reloadPass"></DocumentList>
-
-
-
-    </overlay-scrollbars>
+    </overlay-scrollbars-->
+      <overlay-scrollbars :class = "isList ? 'withHeader':'noHeader'" :options = "defaultStyle" >
+        <DocumentList id = "dList" :itemList="items" @pass = "decode" @reload = "reloadPass" :isList = "isList" ref="list"></DocumentList>
+      </overlay-scrollbars>
     </div>
 
-    <DragArea class = "drag" v-if = "isDrag" @dragClose = "destroyDragArea"></DragArea>
+    <DragArea class = "drag" v-show = "this.$store.state.isFileDrag && !this.$store.state.isElementDragging" @dragClose = "destroyDragArea"></DragArea>
 
-    <!--/ul-->
-      <!--DragArea id = "upArea"></DragArea-->
+
   </div>
 
 </template>
@@ -26,19 +22,21 @@
 <script>
 
 import DirPath from "@/components/DirPath.vue"
-
 import DragArea from "@/components/DragArea.vue"
 import DocumentList from "@/components/DocumentList.vue"
 
 import { mapState } from 'vuex'
-import axios from "axios";
+import FakeHeader from "@/components/FakeHeader";
 
 export default {
   name: "MainPart",
+  props:["isList"],
   data(){
     return{
       items:[],
-      isDrag:false,
+      nameCounter:0,
+      timeCounter:0,
+      sizeCounter:0,
       defaultStyle: {
         className: 'os-theme-thick-light',
         overflowBehavior : {
@@ -50,31 +48,121 @@ export default {
     }
   },
   components:{
-
+    FakeHeader,
     DirPath,
-
     DragArea,
     DocumentList,
   },
   methods:{
+    passSelectInfo(flag){
+      this.$refs.list.selectALL(flag);
+    },
+    sortBy(i){
+      //name
+      if(i === 0){
+        if(this.nameCounter === 0){
+          this.items.sort(function (x,y){
+            if (x.file_name > y.file_name) {
+              return -1;
+            }
+            if (y.file_name > x.file_name) {
+              return 1;
+            }
+            return 0;
+          });
+          this.nameCounter++;
+        }else if(this.nameCounter === 1){
+          this.items.sort(function (x,y){
+            if (x.file_name > y.file_name) {
+              return 1;
+            }
+            if (y.file_name > x.file_name) {
+              return -1;
+            }
+            return 0;
+          });
+          this.nameCounter--;
+        }
+      }
+      //time
+      else if(i === 1){
+        if(this.timeCounter === 0){
+          this.items.sort(function (x,y){
+            if (x.uploadTime > y.uploadTime) {
+              return -1;
+            }
+            if (y.uploadTime> x.uploadTime) {
+              return 1;
+            }
+            return 0;
+          });
+          this.timeCounter++;
+        }else if(this.timeCounter === 1){
+          this.items.sort(function (x,y){
+            if (x.uploadTime > y.uploadTime) {
+              return 1;
+            }
+            if (y.uploadTime > x.uploadTime) {
+              return -1;
+            }
+            return 0;
+          });
+          this.timeCounter--;
+        }
+      }
+      //size need rework
+      else if(i === 2){
+        if(this.sizeCounter === 0){
+          this.items.sort(function (x,y){
+            if (x.fileSize > y.fileSize) {
+              return -1;
+            }
+            if (y.fileSize > x.fileSize) {
+              return 1;
+            }
+            return 0;
+          });
+          this.sizeCounter++;
+        }else if(this.sizeCounter === 1){
+          this.items.sort(function (x,y){
+            if (x.fileSize > y.fileSize) {
+              return 1;
+            }
+            if (y.fileSize > x.fileSize) {
+              return -1;
+            }
+            return 0;
+          });
+          this.sizeCounter--;
+        }
+      }
+
+    },
 
     reloadPass(){
       this.$emit("reload");
     },
     destroyDragArea(){
-      this.isDrag = false;
+      this.$store.commit("updateIsFileDrag",false);
     },
 
     handleDropEvent(e){
       e.stopPropagation();
       e.preventDefault();
-      this.isDrag = true;
+      if(!this.$store.state.isElementDragging){
+        this.$store.commit("updateIsFileDrag",true);
+      }
+
+
+
     },
 
     handleDropOver(e){
       e.stopPropagation();
       e.preventDefault();
-      this.isDrag = true;
+      if(!this.$store.state.isElementDragging){
+        this.$store.commit("updateIsFileDrag",true);
+      }
     },
 
 
@@ -88,7 +176,6 @@ export default {
         for(let element of this.rightNowFileList){
           this.items.push(element);
         }
-
       //}, 350);
     },
 
@@ -109,7 +196,7 @@ export default {
         }
 
       });
-      if(res.code == 200){
+      if(res.code === 200){
         for(let i of res.data){
           i.file_path = "/mainpage/disk" +  i.file_path;
           result.push(i);
@@ -118,7 +205,7 @@ export default {
         this.$store.commit("updateNodeId",result[result.length-1].node_id);
         await this.requestOn(result[result.length-1].node_id, result[result.length-1].file_path);
 
-      }else if(res.code == 453){
+      }else if(res.code === 453){
         this.$router.push("/404error");
       }
 
@@ -136,7 +223,7 @@ export default {
               this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
             }
       });
-      if(res.code == 200){
+      if(res.code === 200){
         this.$store.commit("updateDirList",res.data[0]);
         this.$store.commit("updateFileList",res.data[1]);
         if(filePath === this.$route.fullPath){
@@ -145,7 +232,6 @@ export default {
           this.$router.push(this.$store.state.currentPath);
           this.updateItems();
         }
-
       }
     },
     initial(event){
@@ -160,19 +246,19 @@ export default {
     ...mapState(["rightNowFileList"]),
     monitor(){
       return this.$route.fullPath;
-    }
+    },
   },
   watch:{
     monitor:{
       handler(){
         this.$store.commit("updatePath",this.$route.fullPath);
-        this.decode(this.$store.state.currentPath);
+        this.decode(decodeURIComponent(this.$store.state.currentPath));
       }
-    }
+    },
   },
   mounted() {
     this.$store.commit("updatePath",this.$route.fullPath);
-    this.decode(this.$store.state.currentPath);
+    this.decode(decodeURIComponent(this.$store.state.currentPath));
   },
 
 
@@ -184,6 +270,18 @@ export default {
   margin:0px;
   padding:0px;
 
+}
+.withHeader{
+  width: 100%;
+  height:calc(100vh - 190px);
+  box-sizing: border-box;
+  padding: 5px 20px 20px 20px;
+}
+.noHeader{
+  width: 100%;
+  height:calc(100vh - 150px);
+  box-sizing: border-box;
+  padding: 20px;
 }
 .mainShell{
   width: 100%;
@@ -201,7 +299,6 @@ export default {
   top: 40px;
   z-index: 9999;
 }
-
 
 
 

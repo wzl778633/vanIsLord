@@ -24,6 +24,7 @@ onmessage = function(event){
         spark.append(e.target.result);
         if(maxAccount>0){
             currentChunk = currentChunk + skipInterval;
+            console.log(currentChunk)
         }
         else if(maxAccount===0){
             if(currentChunk < chunks-1){

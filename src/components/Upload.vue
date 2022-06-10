@@ -4,7 +4,8 @@
         placement="bottom-start"
         title="上传总进度"
         width="700"
-        trigger="hover">
+        trigger="hover"
+        id = "uploadPopover">
       <el-button size="small" type="primary" class = "popButton" @click = "routeToUpload" round>前往上传主页面</el-button>
       <div class= "crossLine"></div>
       <el-progress id = "uploadTotalBar" :text-inside="true" :stroke-width="20" :percentage="totalProgress"  status="success"></el-progress>
@@ -60,7 +61,7 @@
         </el-table>
       </div>
 
-      <Vbotton slot="reference" :isWorking = "isUploadEnd" :clickMethod = "handleClick" :nameForButton = "'上传'" :isIcon ="true" :iconClass = "'bi-cloud-upload'"></Vbotton>
+      <Vbotton class = "uploadButton" slot="reference" :isWorking = "isUploadEnd" :clickMethod = "handleClick" :nameForButton = "'上传'" :isIcon ="true" :iconClass = "'bi-cloud-upload'"></Vbotton>
     </el-popover>
     <UploadDialog></UploadDialog>
   </div>
@@ -175,6 +176,13 @@ export default {
   width: 100%;
   height: 400px;
 
+}
+/deep/ .uploadButton.button-container{
+  width: 130px;
+}
+
+/deep/.uploadButton.button-container::before {
+  width: 90px;
 }
 
 .tmpTable{

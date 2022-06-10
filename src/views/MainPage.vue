@@ -25,30 +25,39 @@
               <el-menu-item :index="routeToDiskMusic"><i class="bi-music-note menuIcons"></i> 我的音乐</el-menu-item>
               <el-menu-item :index="routeToDiskVid" ><i class="el-icon-film menuIcons"></i>我的视频</el-menu-item>
               <el-menu-item :index="routeToDiskLove" ><i class="el-icon-star-on menuIcons"></i>我的收藏</el-menu-item>
-              <el-menu-item :index="routeToDiskBT" ><i class="el-icon-sort menuIcons"></i>我的BT种子</el-menu-item>
-
+              <el-menu-item :index="routeToDiskShare" ><i class="el-icon-sort menuIcons"></i>我的分享</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
-          <el-menu-item index="/mainpage/piazza" disabled>
-            <i class="bi-signpost-2 menuIcons"></i>
-            <span slot="title">PIAZZA 大咕咕广场</span>
-          </el-menu-item>
+          <el-submenu index="2">
+            <template slot="title">
+              <i class="bi-signpost-2 menuIcons"></i>
+              <span slot="title">PIAZZA 大咕咕广场</span>
+            </template>
+            <el-menu-item-group>
+              <el-menu-item :index="'/mainpage/piazza'"><i class="bi-house-door menuIcons"></i>大咕咕主广场</el-menu-item>
+              <el-menu-item :index="'/mainpage/shareAll/board 全部文件'" ><i class="bi-folder-symlink menuIcons"></i>全部分享文件</el-menu-item>
+            </el-menu-item-group>
+          </el-submenu>
           <el-menu-item index="/mainpage/tools" disabled>
             <i class="bi-tools menuIcons"></i>
             <span slot="title">小工具</span>
           </el-menu-item>
-          <el-menu-item index="/mainpage/guguboard" disabled>
+          <el-menu-item index="/mainpage/clipboard">
             <i class="bi-chat-right-dots-fill menuIcons"></i>
             <span slot="title">留言板</span>
           </el-menu-item>
         </el-menu>
       <el-main class="frame main">
-          <ToolBar @reload = "reload" :isUpload = "isUpload" :isDisk = "isDisk" :isDiskOrUpload = "isDiskOrUpload" ref="toolBar"></ToolBar>
-          <div v-if="isDiskOrUpload" class = "shameShadow"></div>
-          <router-view v-if="isRouterAlive" @reload = "reload" ></router-view>
+          <ToolBar @reload = "reload" :isSharedMainPage="isSharedMainPage" :isList = "isList" :isSharedMode = "isSharedMode" :isUpload = "isUpload" :isDisk = "isDisk" :isDiskOrUpload = "isDiskOrUpload" ref="toolBar" @selectALL= "selectALL" @clearALL= "clearALL" @ListMode= "listAct" @GridMode= "gridAct"></ToolBar>
+          <div v-show="isDiskOrUpload && !isSharedMainPage" class = "shameShadow"></div>
+          <div v-show="isList && !isSharedMainPage" :class = "!isDisk ? 'shameShadow three':'shameShadow two'"></div>
+          <router-view v-if="isRouterAlive" @reload = "reload" :isSharedMode="isSharedMode" :isList = "isList" ref = "currentComponent"></router-view>
       </el-main>
     </el-container>
-
+    <music-quick-enter :isMainCollapse = "isCollapse" :musicOn = "musicOn" @openMusicPlayer = "openMusicPlayer" :class = "!isCollapse ?'currentmusicQuickEnter':'currentmusicQuickEnter collapse'"></music-quick-enter>
+    <transition name="musicPlayerDes">
+      <music-player v-show = "musicOn" :musicOn = "musicOn" ref = "player"></music-player>
+    </transition>
     <total-space-bar :isMainCollapse = "isCollapse" class = "currentTotalBar" ref="totalBar"></total-space-bar>
     <UserProfile :ifRemove = "isUserOpen" @closeUser = "closeUserProfile" @reloadAvatar = "reloadAvatar"></UserProfile>
     <User :isMainCollapse = "isCollapse" class = "currentUser" @openUser = "openUserProfile" ref="user"></User>
@@ -58,7 +67,7 @@
 </template>
 
 <script>
-import MainPart from '@/components/MainPart.vue'
+import MainPart from '@/views/MainPart.vue'
 import User from '@/components/User.vue'
 import DragArea from "@/components/DragArea";
 import ToolBar from "@/views/ToolBar";
@@ -66,28 +75,29 @@ import UserProfile from "@/components/UserProfile";
 import VPullButton from "@/components/V-pullButton";
 import TotalSpaceBar from "@/components/TotalSpaceBar";
 import Announcement from "@/components/Announcement";
+import MusicPlayer from "@/components/MusicPlayer";
+import MusicQuickEnter from "@/components/musicQuickEnter";
 
 export default {
 
   name: "MainPage",
   data(){
     return{
-      highTable:[
-        {features: "我的网盘"},
-        {features: "PIAZZA"},
-        {features: "小工具"},
-        {features: "待定"}
-      ],
       isRouterAlive: true,
       currentRow:null,
       isCollapse: false,
       isUserOpen:false,
+      isList:false,
+      isSharedMode:false,
+      isSharedMainPage:false,
+
+      musicOn:false,
       routeToDisk:"/mainpage/disk/",
       routeToDiskMusic:"/mainpage/my_music",
       routeToDiskPic:"/mainpage/my_picture",
       routeToDiskVid:"/mainpage/my_video",
       routeToDiskLove:"/mainpage/my_favorite",
-      routeToDiskBT:"/mainpage/my_torrent",
+      routeToDiskShare:"/mainpage/my_share",
       isDisk:false,
       isUpload:false,
       isDiskOrUpload:false,
@@ -101,7 +111,21 @@ export default {
     }
   },
   methods:{
-
+    openMusicPlayer(flag){
+      this.musicOn = flag;
+    },
+    selectALL(){
+      this.$refs.currentComponent.passSelectInfo(true);
+    },
+    clearALL(){
+      this.$refs.currentComponent.passSelectInfo(false);
+    },
+    listAct(){
+      this.isList = true;
+    },
+    gridAct(){
+      this.isList = false;
+    },
     handleCollapse(){
       this.isCollapse = !this.isCollapse;
     },
@@ -135,6 +159,8 @@ export default {
 
   },
   components:{
+    MusicQuickEnter,
+    MusicPlayer,
     Announcement,
     TotalSpaceBar,
     VPullButton,
@@ -145,6 +171,9 @@ export default {
     DragArea,
   },
   async created() {
+    this.$socket.open();
+    console.log("链接启动！");
+    //this.$socket.emit('getUserId',this.$store.state.user_id,localStorage.loginToken);
 
     this.routeToDisk = this.routeToDisk+this.$store.state.user_name;
     let{data:res} = await this.$http.post("/getHistory",{
@@ -181,19 +210,29 @@ export default {
     this.$store.commit('updataVideoFormatCheck',format);
     testEl.remove();
   },
+  sockets: {
+
+  },
+
   computed:{
     monitor(){
       return this.$route.fullPath;
+    },
+    musicMonitor(){
+      return this.$store.state.musicState.isPlayerOpened;
     }
   },
   watch:{
     monitor:{
       handler(val){
-        if(val.includes("/mainpage/disk")){
+        this.isSharedMode = false;
+        this.isSharedMainPage=false;
+        if(val.includes("/mainpage/disk") || val.includes("/mainpage/shareAll")||val.includes("/mainpage/shareUser")){
           this.isDiskOrUpload = true;
           this.isDisk = true;
           this.isUpload = false;
         }else if(val.includes("/mainpage/upload")){
+          this.$store.dispatch("updateIsMultiSelectAsync",false);
           this.isDiskOrUpload = true;
           this.isUpload = true;
           this.isDisk = false;
@@ -203,8 +242,35 @@ export default {
           this.isUpload = false;
           this.isDisk = false;
         }
+
+        if(val.includes(":union")){
+          this.isDiskOrUpload = false;
+          this.isUpload = false;
+          this.isDisk = false;
+        }
+
+        if(val.includes("/mainpage/shareAll") || val.includes("/mainpage/piazza") || val.includes("/mainpage/shareUser")){
+          this.isSharedMode = true;
+        }
+
+        if(val === "/mainpage/piazza"){
+          this.$store.dispatch("updateIsMultiSelectAsync",false);
+          this.isDiskOrUpload = false;
+          this.isUpload = false;
+          this.isDisk = false;
+          this.isSharedMainPage = true;
+        }
       },
       immediate:true,
+    },
+    musicMonitor:{
+      handler(val){
+        if(val){
+          this.musicOn = true;
+          this.$store.dispatch('musicState/isListPlayAsync',false);
+          setTimeout(()=>{this.$refs.player.rollingName();},300);
+        }
+      }
     }
   }
 }
@@ -216,7 +282,7 @@ export default {
   min-width: max-content;
   position: relative;
   height: 100%;
-  min-height: 700px;
+  min-height: 800px;
   background: linear-gradient(to right,#1e1f26 25%,black 100%);
 
 }
@@ -234,6 +300,14 @@ export default {
   top: 30px;
   right: 0;
   z-index: 0;
+}
+.shameShadow.two{
+  top: 70px;
+ background-color: rgba(175, 77, 239, 0.5);
+}
+.shameShadow.three{
+  top: 30px;
+  background-color: rgba(175, 77, 239, 0.5);
 }
 .shameShadow2{
   width: calc(100vw - 220px);
@@ -337,7 +411,14 @@ export default {
   bottom: 75px;
   z-index: 2;
 }
-
+.currentmusicQuickEnter{
+  position: absolute;
+  bottom: 130px;
+  z-index: 2;
+}
+.currentmusicQuickEnter.collapse{
+  bottom: 70px;
+}
 .menuIcons{
   margin-right: 5px;
   width: 24px;
@@ -362,6 +443,15 @@ export default {
 }
 .mainPagePullButton.hide{
   left: 4px;
+
+}
+
+.musicPlayerDes-enter-active,.musicPlayerDes-leave-active{
+  transition: all .3s ease-in-out;
+}
+.musicPlayerDes-enter,.musicPlayerDes-leave-to{
+  transform: translateY(30px);
+  opacity: 0;
 
 }
 </style>

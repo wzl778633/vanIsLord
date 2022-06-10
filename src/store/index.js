@@ -374,25 +374,195 @@ const updateModule = {
 
 
 }
+const musicModule = {
+  namespaced:true,
+  state: () => ({
+    playList: [],
+    isPlayerOpened: false,
+    isOnlyAddList: false,
+    isRepeat: false,
+    nowPlayIndex:0 + 's' + Date.now(),
+  }),
+  mutations: {
+    removeSongFromList(state,index) {
+      state.playList.splice(index,1);
+    },
+    initialPlayList(state,songList){
+      state.playList = songList;
+      //state.nowPlayIndex = 0 + 's' + Date.now();
+    },
+    updatePlayList(state,[song,isShare,isFav,node_id,file_name,artist,name,cover,user_id]){
+      let flag = true;
+      for(let element of state.playList){
+        if(element.node_id === node_id){
+          state.nowPlayIndex = state.playList.indexOf(element) + 's' + Date.now();
+          state.isRepeat = true;
+          flag = false;
+          break;
+        }
+      }
+      if(flag){
+        state.playList.push({
+          name: name,
+          artist: artist,
+          cover: cover,
+          node_id:node_id,
+          user_id:user_id,
+          file_name:file_name,
+          source: song,
+          favorited: isFav,
+          shared:isShare,
+        });
+        state.nowPlayIndex = (state.playList.length-1) + 's' + Date.now();
+      }
 
+    },
+    updatePlayListWithMulti(state,list){
+      for(let element of list){
+        this.commit('musicState/updatePlayList', [element.source,element.shared,element.favorited,element.node_id,element.file_name,element.artist,element.name,element.cover,element.user_id]);
+      }
+    },
+    updatePlayListFav(state, id){
+      for(let element of state.playList){
+        if(element.node_id === id){
+          element.favorited = !element.favorited;
+          break;
+        }
+      }
+    },
+    recoverRepeatFlag(state){
+      state.isRepeat = false;
+    },
+    isListPlay(state, flag){
+      state.isPlayerOpened = flag;
+    },
+    isOnlyAddToList(state, flag){
+      state.isOnlyAddList = flag;
+    },
+    updatePlayListShare(state, id){
+      for(let element of state.playList){
+        if(element.node_id === id){
+          element.shared = !element.shared;
+          break;
+        }
+      }
+    },
+  },
+  actions: {
+    removeSongFromListAsync(context,index){
+      context.commit("removeSongFromList",index)
+    },
+    updatePlayListFavAsync(context, id){
+      context.commit("updatePlayListFav",id)
+    },
+    updatePlayListShareAsync(context, id){
+      context.commit("updatePlayListShare",id)
+    },
+    isListPlayAsync(context, flag){
+      context.commit("isListPlay",flag)
+    },
+    isOnlyAddToListAsync(context,flag){
+      context.commit("isOnlyAddToList",flag);
+    },
+    recoverRepeatFlagAsync(context){
+      context.commit("recoverRepeatFlag");
+    }
+  }
+
+}
 
 
 export default new Vuex.Store({
   state: {
-    user_id :"",
-    user_name:"tom",
+    user_id :0,
+    share_user_id:0,
+    user_name:"",
+    share_user_name:"",
     node_id:1,
     currentPath:"",
+    isFileDrag:false,
+    isElementDragging:false,
     avatarBase64:"",
     searchStr:"",
+    draggingID:0,
+
+    isMultiSelect:false,
+    isMultiDragging:false,
+    isAllDownloadOn:false,
+    isAllDeleteOn:false,
+    isAllMoveOn:false,
+    isAllShareOn:false,
+    isAllMusic:true,
+    isAllAddListOn:false,
+    isGetAllShare:false,
+    allShareMode:false,
+
+    changeFavId:"",
+    changeSharedId:"",
+
+
+    draggingIDs:[],
     videoFormatCheck: {},
     currentDecodePath:[],
-    rightNowDirList:   [],
+    rightNowDirList:[],
     rightNowFileList: [],
 
   },
 
   mutations: {
+
+    updateIsAllMusic(state,flag){
+      state.isAllMusic = flag;
+    },
+    updateChangeFavId(state,id){
+      state.changeFavId = id;
+    },
+    updateChangeSharedId(state,id){
+      state.changeSharedId = id;
+    },
+
+    nowOpenShareUserName(state, name){
+      state.share_user_name = name;
+    },
+    nowOpenShareUserId(state, id){
+      state.share_user_id = id;
+    },
+
+    updateIsAllShareOn(state,[flag,flag2]){
+      state.isAllShareOn = flag;
+      state.allShareMode = flag2;
+    },
+    updateIsAllMoveOn(state,flag){
+      state.isAllMoveOn = flag;
+    },
+    updateIsGetAllShareOn(state,flag){
+      state.isGetAllShare = flag;
+    },
+    updateIsAllAddListOn(state,flag){
+      state.isAllAddListOn = flag;
+    },
+    updateIsAllMoveOnDrag(state,flag){
+      state.isAllMoveOnDrag = flag;
+    },
+    updateIsAllDeleteOn(state,flag){
+      state.isAllDeleteOn = flag;
+    },
+    updateIsFileDrag(state,flag){
+      state.isFileDrag = flag;
+    },
+
+    updateIsAllDownloadOn(state,flag){
+      state.isAllDownloadOn = flag;
+    },
+    updateIsMultiSelect(state,flag){
+      state.isMultiSelect = flag;
+    },
+    updateIsMultiDragging(state,flag){
+      state.isMultiDragging = flag;
+    },
+    updateDraggingIDs(state,arr){
+      state.draggingIDs = arr;
+    },
     updataVideoFormatCheck(state,format){
       state.videoFormatCheck = format;
     },
@@ -416,9 +586,14 @@ export default new Vuex.Store({
       state.node_id = id;
     },
 
-
+    updatedraggingID(state,id){
+      state.draggingID = id;
+    },
     updateDecodePath(state,newPath){
       state.currentDecodePath = newPath;
+    },
+    changeDragState(state,flag){
+      state.isElementDragging = flag;
     },
     deleteFolder(state,nodeid){
      for(let element of state.rightNowDirList){
@@ -447,12 +622,24 @@ export default new Vuex.Store({
 
   },
   actions: {
+    updateChangeFavIdAsync(context,id){
+      context.commit("updateChangeFavId",id)
+    },
+    updateChangeSharedIdAsync(context,id){
+      context.commit("updateChangeSharedId",id)
+    },
     updateSearchStrAsync(context,str){
       context.commit("updateSearchStr",str);
     },
-
+    updatedraggingIDAsync(context,id){
+      context.commit("updatedraggingID",id);
+    },
+    updateIsMultiSelectAsync(context,flag){
+      context.commit("updateIsMultiSelect",flag);
+    }
   },
   modules: {
     updateState:updateModule,
+    musicState:musicModule,
   }
 })

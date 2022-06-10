@@ -27,6 +27,7 @@ export default {
     if (!answer) return false
   },
   created() {
+
     window.onbeforeunload = () => {
       let x = this.$store.state.updateState.preparedFiles.concat(this.$store.state.updateState.uploadingFiles).concat(this.$store.state.updateState.pausedFiles).concat(this.$store.state.updateState.waitingFiles);
       if(x.length != 0){
@@ -123,6 +124,13 @@ export default {
 .el-popover[x-placement^="bottom"] .popper__arrow::after{
   border-bottom-color: #1e1f26 !important;
 }
+
+.el-popper[x-placement^="left"] .popper__arrow{
+  border-left-color: #1e1f26 !important;
+}
+.el-popper[x-placement^="left"] .popper__arrow::after{
+  border-left-color: #1e1f26 !important;
+}
 .message{
   background-color: #444857 !important;
   border: #444857 !important;
@@ -131,5 +139,45 @@ export default {
   color: white !important;
 }
 
+.el-dropdown-menu.el-popper{
+  background-color: rgba(0,0,0,0.9) !important;
+  border: transparent !important;
+  -webkit-box-shadow: 2px 2px 8px 0 rgb(0 0 0 / 20%) !important;
+  box-shadow: 2px 2px 8px 0 rgb(0 0 0 / 20%) !important;
+}
+.el-dropdown-menu.el-popper[x-placement^=bottom] .popper__arrow{
+  border-bottom-color: rgba(0,0,0,0.9) !important;
+
+}
+.el-dropdown-menu.el-popper[x-placement^=bottom] .popper__arrow::after{
+  border-bottom-color: rgba(0,0,0,0.9) !important;
+}
+
+.el-dropdown-menu__item{
+  color: white !important;
+}
+.el-dropdown-menu__item:hover{
+  background: linear-gradient(to left,rgba(0,0,0,0.9) 50%,#E040FB 100%);
+  background-size: 300% 300%;
+  animation: superGradient 0.25s ease-in-out;
+}
+
+@keyframes superGradient {
+  0% {
+    background-position: 100% 0%;
+  }
+  25% {
+    background-position: 75% 0%;
+  }
+  50% {
+    background-position: 50% 0%;
+  }
+  75% {
+    background-position: 25% 0%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
 
 </style>

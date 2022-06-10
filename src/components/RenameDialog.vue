@@ -16,12 +16,19 @@
           </el-alert>
         </transition>
         <div class="enter inputName">请输入新的名称 (注意不允许重名): </div>
-        <el-input v-model="fileName" placeholder="请输入新名称" class = "enter" id="newfileNameInput"></el-input>
+        <el-input v-model="fileName" placeholder="请输入新名称" class = "enter" id="newfileNameInput" @blur = "checkFormat"></el-input>
         <transition name = "newName-error">
           <el-alert v-show="newNameError"
                     title="文件名不能为空！"
                     type="error"
                     show-icon :closable="false" id = "newNameErrorMessage" class="errorMsgs">
+          </el-alert>
+        </transition>
+        <transition name = "newName-error">
+          <el-alert v-show="haveSymbolNameError"
+                    title="文件名不能含有 ?` 、/ ╲ * < > | : 符号"
+                    type="error"
+                    show-icon :closable="false" id = "haveSymbolErrorMessage" class="errorMsgs">
           </el-alert>
         </transition>
       </div>
@@ -46,50 +53,73 @@ export default {
       newNameError:false,
       renameVisibleShell:false,
       sameNameError:false,
+      haveSymbolNameError:false,
+      forbiddenSymbol:['?','`','/', '╲', '*' ,'<', '>','|','、',':'],
     }
   },
   methods:{
     close(){
       this.fileName="";
       this.newNameError=false;
-      this.ameNameError=false;
+      this.sameNameError=false;
+      this.haveSymbolNameError = false;
       this.$emit('closeRename')
+    },
+    checkFormat(event){
+      let flag = false;
+      for (let elment of this.forbiddenSymbol){
+        if(this.fileName.includes(elment)){
+          flag = true;
+          this.haveSymbolNameError = true;
+          this.errorDealing(null,"newfileNameInput","haveSymbolErrorMessage");
+          break;
+        }
+      }
+      if(!flag){
+        this.haveSymbolNameError = false;
+        this.recover(event,"newfileNameInput","haveSymbolErrorMessage");
+      }
     },
     async submitUpload(){
       if(this.fileName === ""){
-        this.newNameError = true
+        this.haveSymbolNameError = false;
+        this.newNameError = true;
         this.errorDealing(null,"newfileNameInput","newNameErrorMessage");
-      }else{
-        await this.$http.post("/file/reName", {
-          user_id: this.$store.state.user_id,
-          node_id: this.nodeId,
-          file_name: this.fileName,
-        }).then((data) => {
-              let res = data.data;
-              if (res.code === 200) {
-                this.$notify(
-                    {
-                      title: '文件重命名成功',
-                      type: 'success',
-                      message: `已成功重命名为${this.fileName}！`,
-                      position: 'bottom-right',
-                      customClass: "message",
-                    }
-                );
-                this.fileName = "";
-                this.$emit("closeRename");
-                this.$emit("reload")
+      }
+      else{
+        this.checkFormat();
+        if(!this.haveSymbolNameError){
+          await this.$http.post("/file/reName", {
+            user_id: this.$store.state.user_id,
+            node_id: this.nodeId,
+            file_name: this.fileName,
+          }).then((data) => {
+                let res = data.data;
+                if (res.code === 200) {
+                  this.$notify(
+                      {
+                        title: '文件重命名成功',
+                        type: 'success',
+                        message: `已成功重命名为${this.fileName}！`,
+                        position: 'bottom-right',
+                        customClass: "message",
+                      }
+                  );
+                  this.fileName = "";
+                  this.$emit("closeRename");
+                  this.$emit("reload")
+                }
+                else if(res.code === 451 || res.code === 452){
+                  this.sameNameError = true;
+                  this.errorDealing(null,"newfileNameInput","sameNameErrorMessage");
+                }
               }
-              else if(res.code === 451 || res.code === 452){
-                this.sameNameError = true;
-                this.errorDealing(null,"newfileNameInput","sameNameErrorMessage");
-              }
+          ).catch((error) => {
+            if(error.status !== 401) {
+              this.$message.error('文件夹创建出现未知问题，请联系Van！ Code:' + error.message);
             }
-        ).catch((error) => {
-          if(error.status !== 401) {
-            this.$message.error('文件夹创建出现未知问题，请联系Van！ Code:' + error.message);
-          }
-        });
+          });
+        }
 
       }
 

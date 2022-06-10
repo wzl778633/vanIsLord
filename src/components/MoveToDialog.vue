@@ -10,12 +10,12 @@
       <div class = "uploadBlock">
         <transition name = "tp-error">
           <el-alert v-show="tpError"
-                    title="禁止原地tp! (你必须移动到不同的文件夹！)"
+                    title="严格禁止自己tp自己,或者tp自己的子文件夹,或该文件已存在在目标文件夹 (你必须移动到不同的文件夹！)"
                     type="error"
                     show-icon :closable="false" id = "tpErrorMessage" class="errorMsgs">
           </el-alert>
         </transition>
-        <p class = "hint">输入或使用选择器输入你想上传的目标路径。</p>
+        <p class = "hint">输入或使用选择器输入你想移动到的目标路径。</p>
         <PathFinder ref = "uploadPathFinder" @pathFinderData = "getData"></PathFinder>
       </div>
     </div>
@@ -32,7 +32,7 @@ import PathFinder from "@/components/PathFinder.vue"
 
 export default {
   name: "MoveToDialog",
-  props:["moveVisible","nodeId","filename"],
+  props:["moveVisible","nodeId","filename","multiMode","nodeIds"],
   mixins:[mixinMethod],
   data(){
     return{
@@ -49,35 +49,169 @@ export default {
       this.$emit("closeMoveTo");
     },
     async moveTo(){
-      let tmp = await this.$refs.uploadPathFinder.checkPath();
-      if(tmp) {
+      if(!this.multiMode){
+        let tmp = await this.$refs.uploadPathFinder.checkPath();
+        if(tmp) {
+          let {data: res} = await this.$http.post("/file/moveFile",
+              {
+                user_id: this.$store.state.user_id,
+                node_id: this.nodeId,
+                new_nodeId: this.moveToInput,
+              }
+          ).catch((error) => {
+            if(error.status !== 401) {
+              this.$message.error('移动出现未知问题，请联系Van！ Code:' + error.message);
+            }}
+          );
+          if (res.code === 200) {
+            this.$emit("closeMoveTo");
+            this.$emit("reload");
+            this.$emit("updateTotalBar");
+            this.$notify(
+                {
+                  title: '移动文件成功',
+                  type: 'success',
+                  message: `${this.filename}已被移动至目的地！`,
+                  position: 'bottom-right',
+                  customClass: "message",
+                }
+            );
+          }else if(res.code === 404 || res.code === 459){
+            this.tpError = true;
+            if(document.getElementById('tpErrorMessage')){
+              let errMsg = document.getElementById('tpErrorMessage');
+              this.shakingAnime(errMsg);
+            }
+          }
+        }
+      }else{
+        let tmp = await this.$refs.uploadPathFinder.checkPath();
+        if(tmp) {
+          let {data: res} = await this.$http.post("/file/moveFiles",
+              {
+                user_id: this.$store.state.user_id,
+                file_list: this.nodeIds,
+                new_nodeId: this.moveToInput,
+              }
+          ).catch((error) => {
+            if(error.status !== 401) {
+              this.$message.error('批量移动出现未知问题，请联系Van！ Code:' + error.message);
+            }}
+          );
+          if (res.code === 200) {
+            this.$emit("closeMoveTo");
+            this.$emit("reload");
+            this.$emit("updateTotalBar");
+            this.$notify(
+                {
+                  title: '批量移动文件成功',
+                  type: 'success',
+                  message: `所有选中文件已被移动至目的地！`,
+                  position: 'bottom-right',
+                  customClass: "message",
+                }
+            );
+          }else if(res.code === 404 || res.code === 459){
+            this.tpError = true;
+            if(document.getElementById('tpErrorMessage')){
+              let errMsg = document.getElementById('tpErrorMessage');
+              this.shakingAnime(errMsg);
+            }
+          }
+        }
+      }
+
+    },
+    //only for drag
+    async blindMoveTo(dragId,newNodeId){
         let {data: res} = await this.$http.post("/file/moveFile",
             {
               user_id: this.$store.state.user_id,
-              node_id: this.nodeId,
-              new_nodeId: this.moveToInput,
+              node_id: dragId,
+              new_nodeId: newNodeId,
             }
+        ).catch((error) => {
+          if(error.status !== 401) {
+            this.$message.error('拖拽移动出现未知问题，请联系Van！ Code:' + error.message);
+          }}
         );
         if (res.code === 200) {
-          this.$emit("closeMoveTo");
           this.$emit("reload");
+          this.$emit("updateTotalBar");
           this.$notify(
               {
-                title: '移动文件成功',
+                title: '拖动移动文件成功',
                 type: 'success',
-                message: `${this.filename}已被移动至目的地！`,
+                message: `文件已被移动至目的地 ${this.filename}！`,
                 position: 'bottom-right',
                 customClass: "message",
               }
           );
         }else if(res.code === 404){
-          this.tpError = true;
-          if(document.getElementById('tpErrorMessage')){
-            let errMsg = document.getElementById('tpErrorMessage');
-            this.shakingAnime(errMsg);
-          }
+          this.$notify(
+              {
+                title: '拖动移动失败',
+                type: 'error',
+                message: `${this.filename}tmd压根不是个文件夹！`,
+                position: 'bottom-right',
+                customClass: "message",
+              });
+        }else if(res.code === 459){
+          this.$notify(
+              {
+                title: '移动失败',
+                type: 'error',
+                message: `文件已在文件夹 ${this.filename}中！严格禁止自己tp自己,或者tp自己的子文件夹！`,
+                position: 'bottom-right',
+                customClass: "message",
+              });
         }
+
+    },
+    async multiBlindMoveTo(dragIds,newNodeId){
+      let {data: res} = await this.$http.post("/file/moveFiles",
+          {
+            user_id: this.$store.state.user_id,
+            file_list: dragIds,
+            new_nodeId: newNodeId,
+          }
+      ).catch((error) => {
+        if(error.status !== 401) {
+          this.$message.error('批量拖拽移动出现未知问题，请联系Van！ Code:' + error.message);
+        }}
+      );
+      if (res.code === 200) {
+        this.$emit("reload");
+        this.$emit("updateTotalBar");
+        this.$notify(
+            {
+              title: '批量拖动移动文件成功',
+              type: 'success',
+              message: `文件群已被移动至目的地 ${this.filename}！`,
+              position: 'bottom-right',
+              customClass: "message",
+            }
+        );
+      }else if(res.code === 404){
+        this.$notify(
+            {
+              title: '批量拖动移动失败',
+              type: 'error',
+              message: `${this.filename}tmd压根不是个文件夹！`,
+              position: 'bottom-right',
+              customClass: "message",
+            });
+      }else if(res.code === 459){
+        this.$notify(
+            {
+              title: '批量移动失败',
+              type: 'error',
+              message: `文件群中有文件 1.已在文件夹 ${this.filename}中！2.自己tp自己！3.tp自己的子文件夹！`,
+              position: 'bottom-right',
+              customClass: "message",
+            });
       }
+
     },
   },
   components:{

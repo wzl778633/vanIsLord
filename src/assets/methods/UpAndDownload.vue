@@ -170,7 +170,7 @@ export default {
       try {
         //while( i< uploadList.length){
           let pool = [];//并发池
-          let fuckPool = [];//取消用的池子
+          //let fuckPool = [];//取消用的池子
           let leftList = uploadList.slice();
 
           let max = 3; //最大并发量
@@ -179,16 +179,17 @@ export default {
             for (let element of this.$store.state.updateState.uploadingFiles) {
               if (element.id === uid) {
                 //查pause
+
                 if (element.isPause === true){
 
                   if(pool.length!==0){
-                    //await Promise.all(pool).catch(()=>{
-                      //this.$store.commit("updateState/updateCompleteFailed", uid);
-                      //errorflag = true;
-                    //})
-                    for(let i = 0; i < fuckPool.length; i++){
-                      await fuckPool[i].cancel();
-                    }
+                    await Promise.all(pool).catch(()=>{
+                      this.$store.commit("updateState/updateCompleteFailed", uid);
+                      errorflag = true;
+                    })
+                    //for(let i = 0; i < fuckPool.length; i++){
+                    //  await fuckPool[i].cancel();
+                    //}
                   }
                   if(errorflag){
                     this.reload();
@@ -225,7 +226,7 @@ export default {
                       position: 'bottom-right',
                       customClass: "message",
                     });
-                    return;
+                    return Promise.resolve();
                   }
                   await this.uploadAbort(uid,"正在上传");
                   return;
@@ -235,9 +236,8 @@ export default {
               }
             }
 
-
             let item = uploadList[i][0]();
-            let cancaler = uploadList[i][1];
+            //let cancaler = uploadList[i][1];
             let removeTag = uploadList[i];
             item.then((data) => {
               if (data.data.code === 200) {
@@ -245,8 +245,8 @@ export default {
                 let rindex = leftList.findIndex(t => t === removeTag);
                 leftList.splice(rindex,1);
 
-                let cindex = fuckPool.findIndex(t => t === cancaler);
-                fuckPool.splice(cindex,1);
+                //let cindex = fuckPool.findIndex(t => t === cancaler);
+                //fuckPool.splice(cindex,1);
 
                 let index = pool.findIndex(t => t === item);
                 pool.splice(index,1);
@@ -263,13 +263,15 @@ export default {
               console.log("多余的错误包，扔掉");
             });
             pool.push(item);
-            fuckPool.push(cancaler);
+            //fuckPool.push(cancaler);
             if(errorflag){
               break;
             }
-            if(pool.length === max){
+            console.log(pool.length)
+            if(pool.length >= max){
               //每当并发池跑完一个任务，就再塞入一个任务
-              await Promise.race(pool).catch((thrown)=>{
+
+              await Promise.race(pool).then((res)=>console.log(res)).catch((thrown)=>{
                   if(!this.$http.isCancel(thrown)){
                     this.$store.commit("updateState/updateCompleteFailed", uid);
                     errorflag = true;

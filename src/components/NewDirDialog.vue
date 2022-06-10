@@ -9,12 +9,19 @@
     <div class = "uploadBody">
       <div class = "uploadBlock">
         <div class="enter inputName">新文件夹的名称: </div>
-        <el-input v-model="fileName" placeholder="请输入新名称！" class = "enter" id="fileNameInput"></el-input>
+        <el-input v-model="fileName" placeholder="请输入新名称！" class = "enter" id="fileNameInput" @blur = "checkFormat"></el-input>
         <transition name = "newName-error">
           <el-alert v-show="newNameError"
                     title="文件夹名不能为空！"
                     type="error"
                     show-icon :closable="false" id = "newNameErrorMessage" class="errorMsgs">
+          </el-alert>
+        </transition>
+        <transition name = "newName-error">
+          <el-alert v-show="haveSymbolNameError"
+                    title="文件名不能含有 ?` 、/ ╲ * < > | : 符号"
+                    type="error"
+                    show-icon :closable="false" id = "haveSymbolErrorMessage" class="errorMsgs">
           </el-alert>
         </transition>
       </div>
@@ -38,44 +45,67 @@ export default {
       newVisibleShell:false,
       fileName:"",
       newNameError:false,
+      haveSymbolNameError:false,
+      forbiddenSymbol:['?','`','/', '╲', '*' ,'<', '>','|','、',':'],
     }
   },
   methods:{
+    checkFormat(event){
+      let flag = false;
+      for (let elment of this.forbiddenSymbol){
+        if(this.fileName.includes(elment)){
+          flag = true;
+          this.haveSymbolNameError = true;
+          this.errorDealing(null,"fileNameInput","haveSymbolErrorMessage");
+          break;
+        }
+      }
+      if(!flag){
+        this.haveSymbolNameError = false;
+        this.recover(event,"fileNameInput","haveSymbolErrorMessage");
+      }
+    },
     close(){
-      this.$emit("closeNewDir")
+      this.fileName = "";
+      this.newNameError=false;
+      this.haveSymbolNameError=false;
+      this.$emit("closeNewDir");
     },
     async submitUpload(){
       if(this.fileName === ""){
+        this.haveSymbolNameError = false;
         this.newNameError = true
         this.errorDealing(null,"fileNameInput","newNameErrorMessage");
       }else{
-        await this.$http.post("/file/newdir", {
-          user_id: this.$store.state.user_id,
-          node_id: this.$store.state.node_id,
-          file_name: this.fileName,
-        }).then((data) => {
-              let res = data.data;
-              if (res.code === 200) {
-                this.$notify(
-                    {
-                      title: '新文件夹创建成功',
-                      type: 'success',
-                      message: `已成功创建新文件夹 ${this.fileName}！`,
-                      position: 'bottom-right',
-                      customClass: "message",
-                    }
-                );
-                this.fileName = "";
-                this.$emit("closeNewDir")
-                this.$emit("reload")
+        this.checkFormat();
+        if(!this.haveSymbolNameError) {
+          await this.$http.post("/file/newdir", {
+            user_id: this.$store.state.user_id,
+            node_id: this.$store.state.node_id,
+            file_name: this.fileName,
+          }).then((data) => {
+                let res = data.data;
+                if (res.code === 200) {
+                  this.$notify(
+                      {
+                        title: '新文件夹创建成功',
+                        type: 'success',
+                        message: `已成功创建新文件夹 ${this.fileName}！`,
+                        position: 'bottom-right',
+                        customClass: "message",
+                      }
+                  );
+                  this.fileName = "";
+                  this.$emit("closeNewDir")
+                  this.$emit("reload")
+                }
               }
+          ).catch((error) => {
+            if (error.status !== 401) {
+              this.$message.error('文件夹创建出现未知问题，请联系Van！ Code:' + error.message);
             }
-        ).catch((error) => {
-          if(error.status !== 401) {
-            this.$message.error('文件夹创建出现未知问题，请联系Van！ Code:' + error.message);
-          }
-        });
-
+          });
+        }
       }
 
     },
