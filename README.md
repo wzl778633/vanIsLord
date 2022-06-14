@@ -8,10 +8,10 @@
 - 音乐播放器
 - 用户间文件分享
 - 用户间聊天室·留言
-- 为其他流媒体服务（如jellyfin，emby）提供资源输入重命名规范
+- 为其他流媒体服务（如jellyfin，emby）提供资源输入重命名规范（使用TMDB）
 等功能。前后端分离。适合为中小用户群提供自由交换资源/共用流媒体服务器资源整合的平台。
 
-目前仍在开发中，现版本仅为alpha测试版本且仅支持docker镜像部署。
+目前网盘系统/分享/音乐播放器/文件预览已基本开发完成，用户间聊天室/重命名等其他服务仍在开发中，现版本仅为alpha测试版本且仅支持docker镜像部署。
 
 ![image](https://user-images.githubusercontent.com/55415793/173569340-9c1efaa2-3329-4129-a4f0-aa33165f1473.png)
 ![image](https://user-images.githubusercontent.com/55415793/173570282-483bc72d-0d5b-40a7-874b-78e9cf775a20.png)
