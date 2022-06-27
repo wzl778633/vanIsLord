@@ -36,7 +36,7 @@ export default {
 
     }
 
-
+    //this.$http.get("/updateSystem");
     if(localStorage.loginToken){
      this.$http.post("/user/checkToken",{
         //没有userId
@@ -162,6 +162,19 @@ export default {
   animation: superGradient 0.25s ease-in-out;
 }
 
+.mainPart .el-submenu .el-menu-item{
+  height: 35px;
+  line-height: 35px;
+}
+.mainPart .el-menu-item{
+  height: 45px;
+  line-height: 45px;
+}
+
+.mainPart .el-submenu__title{
+  height: 45px;
+  line-height: 45px;
+}
 @keyframes superGradient {
   0% {
     background-position: 100% 0%;

@@ -34,7 +34,7 @@
   <transition name = "exchange" type = "transition">
     <div key="needToShow" v-if = "ifRemove" @click = "remove" id = "background"></div>
   </transition>
-  <AvatarUploudDialog :isOpen = "openAvatar" @closeAvatarUpload = "closeAvatarDialog" @reload = "reload"></AvatarUploudDialog>
+  <AvatarUploudDialog :isOpen = "openAvatar" :userAvatarUpload = "true" @closeAvatarUpload = "closeAvatarDialog" @reload = "reload"></AvatarUploudDialog>
   <PasswordChangeDialog :isOpen = "openPassword" @closePasswordChange = "closePasswordDialog" @closePasswordChangeWithS = "closePasswordDialogWithS"></PasswordChangeDialog>
 </div>
 </template>

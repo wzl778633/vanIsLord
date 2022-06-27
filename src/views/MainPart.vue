@@ -37,6 +37,7 @@ export default {
       nameCounter:0,
       timeCounter:0,
       sizeCounter:0,
+      loading:null,
       defaultStyle: {
         className: 'os-theme-thick-light',
         overflowBehavior : {
@@ -180,6 +181,14 @@ export default {
     },
 
     async decode(path){
+      this.loading = this.$loading({
+        target:".mainShell",
+        lock: true,
+        fullscreen:false,
+        text: '正在加载，请稍后...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
       this.$store.commit("updatePath",path);
       let arr = path.split("/");
       arr = arr.slice(3,arr.length);
@@ -191,6 +200,7 @@ export default {
             "content": arr,
           },
       ).catch((error) => {
+        this.loading.close();
         if(error.status !== 401){
           this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
         }
@@ -206,6 +216,7 @@ export default {
         await this.requestOn(result[result.length-1].node_id, result[result.length-1].file_path);
 
       }else if(res.code === 453){
+        this.loading.close();
         this.$router.push("/404error");
       }
 
@@ -219,6 +230,7 @@ export default {
             "node_id": Number(id),
           },
       ).catch((error) => {
+            this.loading.close();
             if(error.status !== 401) {
               this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
             }
@@ -232,6 +244,7 @@ export default {
           this.$router.push(this.$store.state.currentPath);
           this.updateItems();
         }
+        this.loading.close();
       }
     },
     initial(event){

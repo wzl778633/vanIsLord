@@ -1,5 +1,7 @@
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require('@vue/cli-service');
 
+const Version = new Date().getTime();
+const isPro = process.env.NODE_ENV === 'production';
 module.exports = defineConfig({
   transpileDependencies: true,
   devServer:{
@@ -19,6 +21,14 @@ module.exports = defineConfig({
   },
 
   chainWebpack: config => {
+    if (isPro) {
+      config.plugin('extract-css').tap((args) => [
+        {
+          filename: `css/[name].${Version}.css`,
+          chunkFilename: `css/[name].${Version}.css`,
+        },
+      ])
+    }
 
     config.module
         .rule('worker')
@@ -29,16 +39,19 @@ module.exports = defineConfig({
           inline: 'fallback'
         })
 
-    config.output.globalObject('this')
-    config.optimization.delete('splitChunks')
+    //config.output.globalObject('this')
+    //config.optimization.delete('splitChunks')
   },
 
   parallel: false,
   publicPath: '/',
 
   configureWebpack: {
-
-    devtool: 'source-map',
+    output: {
+      filename: `js/[name].${Version}.js`,
+      chunkFilename: `js/[name].${Version}.js`,
+    },
+    //devtool: 'source-map',
     performance:{
       maxAssetSize: 30000000,
     }

@@ -20,6 +20,7 @@ export default {
   data(){
     return{
       users:[],
+      loading:null,
       defaultStyle: {
         className: 'os-theme-thick-light',
         overflowBehavior : {
@@ -35,11 +36,25 @@ export default {
     },
   },
   async mounted(){
+    this.loading = this.$loading({
+      target:".mainShell",
+      lock: true,
+      fullscreen:false,
+      text: '正在加载，请稍后...',
+      spinner: 'el-icon-loading',
+      background: 'rgba(0, 0, 0, 0.7)'
+    });
     let{data : res}= await this.$http.get("/share/queryUser",{params:{
           user_id:this.$store.state.user_id,
-      }});
+      }}).catch((error)=>{
+      this.loading.close();
+      if(error.status !== 401) {
+        this.$message.error('分享广场用户加载出现未知问题，请联系Van！ Code:' + error.message);
+      }
+    });
     if(res.code === 200){
       this.users = res.data;
+      this.loading.close();
     }
   }
 }

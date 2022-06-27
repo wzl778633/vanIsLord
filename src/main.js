@@ -28,13 +28,14 @@ import {Base64} from 'js-base64'
 
 import VueSocketIO from 'vue-socket.io'
 
-Vue.use(new VueSocketIO({
-    debug: true,
-    connection: 'http://192.168.1.143:27000',
-    options:{
-        autoConnect: false,
-    }
-}));
+ Vue.use(new VueSocketIO({
+     debug: true,
+     //connection: '192.168.1.143',
+     connection: 'https://aijiangsb.com:9070',
+     options:{
+         autoConnect: false,
+     }
+ }));
 
 
 Vue.use(ChatWindow);
@@ -84,8 +85,9 @@ axios.interceptors.response.use(res => {return res;},error => {
 
 Vue.prototype.$http = axios;
 Vue.prototype.$Base64 = Base64;
-Vue.prototype.$addr=  'http://192.168.1.143:9090',
+//Vue.prototype.$addr=  'http://192.168.1.143:9090';
 //Vue.prototype.$addr= 'http://192.168.1.169:9090';
+Vue.prototype.$addr= 'https://aijiangsb.com:9070/api';
 Vue.config.productionTip = false
 
 new Vue({

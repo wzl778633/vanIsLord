@@ -27,34 +27,29 @@
 <script>
 export default {
   name: "UserSelectDialog",
-  props: ["userSelectDialogShow"],
+  props: ["userSelectDialogShow","userTotalList","usersAlreadyInRoom"],
   data(){
-    const generateData = _ => {
-      const data = [];
-      const userList = ["tom","test","wzl778633","wadaw","hhhaaa","asdwq22"];
-      userList.forEach((name, index) => {
-        data.push({
-          label: name,
-          key: (index+100),
-          user_id:index,
-        });
-      });
-      return data;
-    };
     return{
-      userList:generateData(),
+      userList:[],
       value:[],
       userSelectDialogShowShell : false,
     }
   },
   methods:{
     renderFunc(h, option){
-      let src = `${this.$addr}/vavatar/${option.key}?token=${localStorage.loginToken}&time=${Date.now()}`;
+      let src = option.avatar;
       return <span style="display: flex; justify-content: flex-start; align-items: center;"><el-avatar size={25} src = {src} ></el-avatar><p style="margin:0 0 0 5px">{option.label }</p></span>;
     },
     createRoom(){
-      console.log(this.value);
-      this.$emit("closeUserSelectWithUserList",this.value);
+      if(this.value.length <= this.usersAlreadyInRoom.length){
+        this.$message({
+          type: 'error',
+          message: '请至少选择一位新的镇民！'
+        });
+      }
+      else{
+        this.$emit("closeUserSelectWithUserList",this.value);
+      }
     },
     closeDialog(){
       this.$emit("closeUserSelectWithUserList");
@@ -64,6 +59,31 @@ export default {
     'userSelectDialogShow':{
       handler(val){
         this.userSelectDialogShowShell = val;
+        if(val){
+          this.userList = [];
+          this.value = [];
+          const tmpUserList = this.userTotalList;
+          tmpUserList.forEach((name, index) => {
+            this.userList.push({
+              label: name.username,
+              key: name._id,
+              user_id: name._id,
+              avatar: name.avatar,
+            });
+          });
+          const tmpAlreadyUserList = this.usersAlreadyInRoom;
+          tmpAlreadyUserList.forEach((name, index) => {
+              this.userList.push({
+                label: name.username,
+                key: name._id,
+                user_id:name._id,
+                avatar:name.avatar,
+                disabled: true,
+              });
+          });
+
+          this.value = this.usersAlreadyInRoom.map(x=>x._id);
+        }
       }
     }
   }

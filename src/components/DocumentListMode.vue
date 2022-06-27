@@ -89,7 +89,8 @@
       <video v-if = "item.content_type === 'film'" :src="liveSrc" controls autoplay class ="openedInnerBlock video"></video>
       <iframe v-else-if="item.content_type === 'filetype-pdf'" :src="liveSrc" class ="openedInnerBlock text"></iframe>
       <iframe v-else-if="item.content_type === 'filetype-txt'" :src="liveSrc" class ="openedInnerBlock text" ></iframe>
-      <iframe v-else :src = "`${this.$addr}/onlinePreview?url=${encodeURIComponent(this.$Base64.encode(liveSrc))}`" class ="openedInnerBlock text" ></iframe>
+      <iframe v-else :src = "`https://aijiangsb.com:9070/preview/onlinePreview?url=${encodeURIComponent(this.$Base64.encode(liveSrc))}`" class ="openedInnerBlock text" ></iframe>
+      <!--iframe v-else :src = "`${this.$addr}/onlinePreview?url=${encodeURIComponent(this.$Base64.encode(liveSrc))}`" class ="openedInnerBlock text" ></iframe-->
     </div>
   </el-dialog>
 </div>
@@ -516,7 +517,12 @@ export default {
             this.onlyOneTranscodeError = false;
           }
           //this.liveSrc = `https://aijiangsb.com:9070/api/vopen/${this.hash}?token=${localStorage.loginToken}`;
-          this.liveSrc = `${this.$addr}/vopen/${this.hash}?token=${localStorage.loginToken}&fullfilename=${this.item.file_name}`;
+          if(this.item.content_type === 'filetype-txt' || this.item.content_type === 'film'||this.item.content_type === 'filetype-pdf'){
+            this.liveSrc = `${this.$addr}/vopen/${this.hash}?token=${localStorage.loginToken}&fullfilename=${this.item.file_name}`;
+          }
+          else{
+            this.liveSrc = `http://172.17.0.1:9090/vopen/${this.hash}?token=${localStorage.loginToken}&fullfilename=${this.item.file_name}`;
+          }
           //this.liveSrc = `http://192.168.1.143:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
           loading.close();
           this.dialogVisible = false;
@@ -574,24 +580,33 @@ export default {
         if(this.isSharedMode){
           userId = this.item.user_id;
         }
+        const loading = this.$loading({
+          lock: true,
+          text: '正在加载，请稍后...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
         let {data:res} = await this.$http.get("/file/detail",{
           params:{
             user_id:userId,
             node_id:this.item.node_id,
           }
         }).catch((error) => {
+          loading.close();
           if(error.status !== 401) {
             this.$message.error('转码出现未知问题，请联系Van！ Code:' + error.message);
           }
         });
 
         if(res.code === 200){
+          loading.close();
           this.realData = res.data;
           this.realData.content_type = this.realData.content_type  === 'folder' ? '文件夹' : this.realData.content_type.toUpperCase() + ' 文件';
           this.dialogVisible = true;
           this.notCheckYet = false;
         }
       }else{
+        loading.close();
         this.dialogVisible = true;
       }
     },
@@ -600,7 +615,7 @@ export default {
     async imageGetMD5andUrl(){
       await this.getHash();
       //this.liveSrc = `http://192.168.1.169:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
-      this.liveSrc = `${this.$addr}:9090/vopen/${this.hash}?token=${localStorage.loginToken}`;
+      this.liveSrc = `${this.$addr}/vopen/${this.hash}?token=${localStorage.loginToken}`;
       return this.liveSrc;
     },
     // async downloadRequest(){

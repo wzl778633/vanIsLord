@@ -205,6 +205,11 @@ export default {
           loginData = data.data
           if (loginData.code == "200") {
             console.log("注册成功");
+            this.$socket.open();
+            console.log("链接暂时启动 注册状态！");
+            this.$socket.emit("newUserToMainRoom",this.account);
+            this.$socket.close();
+
             this.passwordError = false;
             this.rePasswordError = false;
             this.emailPasswordError = false;

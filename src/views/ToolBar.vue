@@ -7,7 +7,7 @@
         <el-button type="primary" @click="forward" id = "forward" size = "small" round><i class = "bi-box-arrow-right"></i> 前进</el-button>
       </el-button-group>
 
-      <el-dropdown v-show="(isDisk || !isDiskOrUpload) && !isSharedMainPage && isSharedMode" trigger="click" @command="switchShareFileMode">
+      <el-dropdown v-show="(isDisk || !isDiskOrUpload) && !isSharedMainPage && isSharedMode && !isClipBoard" trigger="click" @command="switchShareFileMode">
         <el-button type="primary" class = "viewMode menu" size = "mini">
           {{shareMode}}<i class="el-icon-arrow-down el-icon--right"></i>
         </el-button>
@@ -19,7 +19,7 @@
         </el-dropdown-menu>
       </el-dropdown>
       <el-input
-          v-show="!isUpload && !isSharedMainPage"
+          v-show="!isUpload && !isSharedMainPage && !isClipBoard"
           v-model="search"
           size="mini"
           prefix-icon="el-icon-search"
@@ -28,7 +28,7 @@
           class = "globalSearch"
           placeholder="在本页面搜索相关文件"
       />
-      <el-button-group v-show="(isDisk || !isDiskOrUpload) && !isSharedMainPage">
+      <el-button-group v-show="(isDisk || !isDiskOrUpload) && !isSharedMainPage && !isClipBoard">
         <el-button type="primary" @click="allSelect" id = "allSelect" size = "mini" round><i class = "bi-check2-square"></i> 全选</el-button>
         <el-button type="primary" @click="allClear" id = "allClear" size = "mini" round><i class = "bi-slash-square"></i> 清除</el-button>
       </el-button-group>
@@ -60,13 +60,13 @@
       </div>
       </transition>
 
-        <el-radio-group class = "forAllTool" v-show="(isDisk || !isDiskOrUpload) && !isSharedMainPage" v-model="ccc" size="mini" @change="listAndGridMode">
+        <el-radio-group class = "forAllTool" v-show="(isDisk || !isDiskOrUpload) && !isSharedMainPage && !isClipBoard" v-model="ccc" size="mini" @change="listAndGridMode">
           <el-radio-button :label="1" class = "viewModeSingleSelect"><i class = "bi-list"></i></el-radio-button>
           <el-radio-button :label="2" class = "viewModeSingleSelect"><i class = "bi-grid"></i></el-radio-button>
         </el-radio-group>
 
       <!--Download></Download-->
-      <Vbotton v-show="isDisk && !isSharedMode" :clickMethod = "handleClick" :nameForButton = "'新建文件夹'" :isIcon ="true" :iconClass = "'bi-folder-plus'" class = "folderButton" :vStyle = "'rounded'"></Vbotton>
+      <Vbotton v-show="isDisk && !isSharedMode && !isClipBoard" :clickMethod = "handleClick" :nameForButton = "'新建文件夹'" :isIcon ="true" :iconClass = "'bi-folder-plus'" class = "folderButton" :vStyle = "'rounded'"></Vbotton>
       <Upload></Upload>
     </div>
 
@@ -83,7 +83,7 @@ import NewDirDialog from "@/components/NewDirDialog";
 export default {
   name: "ToolBar",
   inject:['reload'],
-  props:['isDisk','isDiskOrUpload','isUpload','isSelected','isSharedMode',"isList","isSharedMainPage"],
+  props:['isDisk','isDiskOrUpload','isUpload','isSelected','isSharedMode',"isList","isSharedMainPage","isClipBoard"],
   data(){
     return{
       newVisible:false,

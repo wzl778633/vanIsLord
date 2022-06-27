@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-      title="上传头像"
+      :title="userAvatarUpload ? '上传头像' : '上传房间头像'"
       :visible.sync="uploadVisible"
       v-if="uploadVisible"
       :append-to-body = "true"
@@ -54,7 +54,7 @@ import mixinMethod from "@/assets/methods/checkAndPOP";
 
 export default {
   name: "AvatarUploudDialog",
-  props:["isOpen"],
+  props:["isOpen","userAvatarUpload","roomId"],
   mixins:[mixinMethod],
   data(){
     return{
@@ -88,38 +88,68 @@ export default {
     },
     async changeAvatar(file){
       if(this.checkTypeAndSize){
-        const formData = new FormData();
-        formData.append("file",file.file);
-        formData.append("user_id",this.$store.state.user_id)
-        await this.$http.post("/user/updatePhoto",formData,
-            {
-              headers:{
-                "Content-Type": "multipart/form-data"
-              }
-            }
-            ).then((data) =>
-        {
-          if(data.data.code === 200){
-            this.$notify(
-                {
-                  title: '头像上传成功',
-                  type: 'success',
-                  message: `已成功上传新的头像！`,
-                  position: 'bottom-right',
-                  customClass: "message",
+        if(this.userAvatarUpload){
+          const formData = new FormData();
+          formData.append("file",file.file);
+          formData.append("user_id",this.$store.state.user_id)
+          await this.$http.post("/user/updatePhoto",formData,
+              {
+                headers:{
+                  "Content-Type": "multipart/form-data"
                 }
-            );
-            this.$emit("reload")
-          }
-        }).catch((error) => {
-          if(error.status !== 401) {
-            this.$message.error('头像上传出现未知问题，请联系Van！ Code:' + error.message);
+              }
+          ).then((data) =>
+          {
+            if(data.data.code === 200){
+              this.$notify(
+                  {
+                    title: '头像上传成功',
+                    type: 'success',
+                    message: `已成功上传新的头像！`,
+                    position: 'bottom-right',
+                    customClass: "message",
+                  }
+              );
+              this.$emit("reload")
+            }
+          }).catch((error) => {
+            if(error.status !== 401) {
+              this.$message.error('头像上传出现未知问题，请联系Van！ Code:' + error.message);
 
-          }
-        });
+            }
+          });
+        }
+        else{
+          const formData = new FormData();
+          formData.append("file",file.file);
+          formData.append("roomId",this.roomId);
+          await this.$http.post("/user/updateRoomPhoto",formData,
+              {
+                headers:{
+                  "Content-Type": "multipart/form-data"
+                }
+              }
+          ).then((data) =>
+          {
+            if(data.data.code === 200){
+              this.$notify(
+                  {
+                    title: '房间头像上传成功',
+                    type: 'success',
+                    message: `已成功上传新的头像！`,
+                    position: 'bottom-right',
+                    customClass: "message",
+                  }
+              );
+            }
+          }).catch((error) => {
+            if(error.status !== 401) {
+              this.$message.error('房间头像上传出现未知问题，请联系Van！ Code:' + error.message);
+            }
+          });
+        }
+
       }
-
-
 
     },
     submitUpload() {

@@ -267,11 +267,10 @@ export default {
             if(errorflag){
               break;
             }
-            console.log(pool.length)
             if(pool.length >= max){
               //每当并发池跑完一个任务，就再塞入一个任务
 
-              await Promise.race(pool).then((res)=>console.log(res)).catch((thrown)=>{
+              await Promise.race(pool).then((res)=>{/*console.log(res)*/}).catch((thrown)=>{
                   if(!this.$http.isCancel(thrown)){
                     this.$store.commit("updateState/updateCompleteFailed", uid);
                     errorflag = true;

@@ -7,10 +7,12 @@
     <div class = "shameShadow2"></div>
     <el-container class="mainPart">
 
+        <!--@select ="attedCheck"-->
         <el-menu :default-active="this.$route.fullPath"
                  class="frame aside"
                  :collapse="isCollapse"
                  :router = "true"
+
                  background-color="#1e1f26"
                  text-color="#fff"
                  active-text-color="#ffd04b">
@@ -38,20 +40,28 @@
               <el-menu-item :index="'/mainpage/shareAll/board 全部文件'" ><i class="bi-folder-symlink menuIcons"></i>全部分享文件</el-menu-item>
             </el-menu-item-group>
           </el-submenu>
+          <el-menu-item index="/mainpage/clipboard">
+            <el-badge value="有人@你" :hidden = "someOneAT" class="badge">
+              <i class="bi-chat-right-dots-fill menuIcons"></i>
+            </el-badge>
+            <span slot="title">留言板</span>
+          </el-menu-item>
           <el-menu-item index="/mainpage/tools" disabled>
             <i class="bi-tools menuIcons"></i>
             <span slot="title">小工具</span>
           </el-menu-item>
-          <el-menu-item index="/mainpage/clipboard">
-            <i class="bi-chat-right-dots-fill menuIcons"></i>
-            <span slot="title">留言板</span>
-          </el-menu-item>
+
+
+
         </el-menu>
       <el-main class="frame main">
-          <ToolBar @reload = "reload" :isSharedMainPage="isSharedMainPage" :isList = "isList" :isSharedMode = "isSharedMode" :isUpload = "isUpload" :isDisk = "isDisk" :isDiskOrUpload = "isDiskOrUpload" ref="toolBar" @selectALL= "selectALL" @clearALL= "clearALL" @ListMode= "listAct" @GridMode= "gridAct"></ToolBar>
+          <ToolBar @reload = "reload" :isClipBoard = "isClipBoard" :isSharedMainPage="isSharedMainPage" :isList = "isList" :isSharedMode = "isSharedMode" :isUpload = "isUpload" :isDisk = "isDisk" :isDiskOrUpload = "isDiskOrUpload" ref="toolBar" @selectALL= "selectALL" @clearALL= "clearALL" @ListMode= "listAct" @GridMode= "gridAct"></ToolBar>
           <div v-show="isDiskOrUpload && !isSharedMainPage" class = "shameShadow"></div>
           <div v-show="isList && !isSharedMainPage" :class = "!isDisk ? 'shameShadow three':'shameShadow two'"></div>
-          <router-view v-if="isRouterAlive" @reload = "reload" :isSharedMode="isSharedMode" :isList = "isList" ref = "currentComponent"></router-view>
+
+          <!--vue-router to chatroom component-->
+        <keep-alive :include="'ChatRoom'"><router-view v-if="isRouterAlive" @reload = "reload" @eliminateAt = "clearAt" :someOneAT="someOneAT" :isSharedMode="isSharedMode" :isList = "isList" ref = "currentComponent"></router-view></keep-alive>
+
       </el-main>
     </el-container>
     <music-quick-enter :isMainCollapse = "isCollapse" :musicOn = "musicOn" @openMusicPlayer = "openMusicPlayer" :class = "!isCollapse ?'currentmusicQuickEnter':'currentmusicQuickEnter collapse'"></music-quick-enter>
@@ -90,7 +100,9 @@ export default {
       isList:false,
       isSharedMode:false,
       isSharedMainPage:false,
+      isClipBoard:false,
 
+      someOneAT:true,
       musicOn:false,
       routeToDisk:"/mainpage/disk/",
       routeToDiskMusic:"/mainpage/my_music",
@@ -111,6 +123,9 @@ export default {
     }
   },
   methods:{
+    clearAt(){
+      this.someOneAT = true;
+    },
     openMusicPlayer(flag){
       this.musicOn = flag;
     },
@@ -156,7 +171,11 @@ export default {
     handleCurrentChange(val) {
       this.currentRow = val;
     },
-
+    attedCheck(index,indexPath){
+      if(index === "/mainpage/clipboard"){
+        this.someOneAT = true;
+      }
+    }
   },
   components:{
     MusicQuickEnter,
@@ -173,8 +192,7 @@ export default {
   async created() {
     this.$socket.open();
     console.log("链接启动！");
-    //this.$socket.emit('getUserId',this.$store.state.user_id,localStorage.loginToken);
-
+    this.$socket.emit('getUserId',this.$store.state.user_id,localStorage.loginToken);
     this.routeToDisk = this.routeToDisk+this.$store.state.user_name;
     let{data:res} = await this.$http.post("/getHistory",{
       user_id:this.$store.state.user_id,
@@ -211,7 +229,12 @@ export default {
     testEl.remove();
   },
   sockets: {
-
+    //有人@我
+    attedMe(data){
+      if(data){
+        this.someOneAT = false;
+      }
+    }
   },
 
   computed:{
@@ -227,6 +250,7 @@ export default {
       handler(val){
         this.isSharedMode = false;
         this.isSharedMainPage=false;
+        this.isClipBoard = false;
         if(val.includes("/mainpage/disk") || val.includes("/mainpage/shareAll")||val.includes("/mainpage/shareUser")){
           this.isDiskOrUpload = true;
           this.isDisk = true;
@@ -241,6 +265,10 @@ export default {
           this.isDiskOrUpload = false;
           this.isUpload = false;
           this.isDisk = false;
+        }
+
+        if(val === "/mainpage/clipboard"){
+          this.isClipBoard = true;
         }
 
         if(val.includes(":union")){
@@ -268,7 +296,7 @@ export default {
         if(val){
           this.musicOn = true;
           this.$store.dispatch('musicState/isListPlayAsync',false);
-          setTimeout(()=>{this.$refs.player.rollingName();},300);
+          //setTimeout(()=>{this.$refs.player.rollingName();},300);
         }
       }
     }
@@ -282,7 +310,7 @@ export default {
   min-width: max-content;
   position: relative;
   height: 100%;
-  min-height: 800px;
+  min-height: 750px;
   background: linear-gradient(to right,#1e1f26 25%,black 100%);
 
 }
@@ -452,6 +480,10 @@ export default {
 .musicPlayerDes-enter,.musicPlayerDes-leave-to{
   transform: translateY(30px);
   opacity: 0;
+
+}
+.badge > /deep/ sup{
+  top:20%;
 
 }
 </style>

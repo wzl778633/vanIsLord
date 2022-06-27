@@ -65,9 +65,9 @@ export default {
   props:["defaultName","defaultEmail"],
   data(){
     return{
-      account: "test",
+      account: "",
       email:"",
-      password: "WWww123456,./",
+      password: "",
       passwordError:false,
       postReturnError:false,
       isLogin:true,

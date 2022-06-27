@@ -869,6 +869,7 @@ export default {
   bottom: 5%;
   right: 0%;
   transition: all .3s ease-in-out;
+  z-index: 20;
 }
 .musicPlayer.hide{
   position: absolute;
@@ -877,6 +878,7 @@ export default {
   bottom: 5%;
   right: -300px;
   transition: all .3s ease-in-out;
+
 }
 .icon {
   display: inline-block;

@@ -52,6 +52,12 @@ export default {
       if(!this.multiMode){
         let tmp = await this.$refs.uploadPathFinder.checkPath();
         if(tmp) {
+          const loading = this.$loading({
+            lock: true,
+            text: '文件移动中...',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          });
           let {data: res} = await this.$http.post("/file/moveFile",
               {
                 user_id: this.$store.state.user_id,
@@ -61,12 +67,14 @@ export default {
           ).catch((error) => {
             if(error.status !== 401) {
               this.$message.error('移动出现未知问题，请联系Van！ Code:' + error.message);
+              loading.close();
             }}
           );
           if (res.code === 200) {
             this.$emit("closeMoveTo");
             this.$emit("reload");
             this.$emit("updateTotalBar");
+            loading.close();
             this.$notify(
                 {
                   title: '移动文件成功',
@@ -77,6 +85,7 @@ export default {
                 }
             );
           }else if(res.code === 404 || res.code === 459){
+            loading.close();
             this.tpError = true;
             if(document.getElementById('tpErrorMessage')){
               let errMsg = document.getElementById('tpErrorMessage');
@@ -86,6 +95,12 @@ export default {
         }
       }else{
         let tmp = await this.$refs.uploadPathFinder.checkPath();
+        const loading = this.$loading({
+          lock: true,
+          text: '文件移动中...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
         if(tmp) {
           let {data: res} = await this.$http.post("/file/moveFiles",
               {
@@ -96,12 +111,14 @@ export default {
           ).catch((error) => {
             if(error.status !== 401) {
               this.$message.error('批量移动出现未知问题，请联系Van！ Code:' + error.message);
+              loading.close();
             }}
           );
           if (res.code === 200) {
             this.$emit("closeMoveTo");
             this.$emit("reload");
             this.$emit("updateTotalBar");
+            loading.close();
             this.$notify(
                 {
                   title: '批量移动文件成功',
@@ -112,6 +129,7 @@ export default {
                 }
             );
           }else if(res.code === 404 || res.code === 459){
+            loading.close();
             this.tpError = true;
             if(document.getElementById('tpErrorMessage')){
               let errMsg = document.getElementById('tpErrorMessage');
@@ -124,6 +142,12 @@ export default {
     },
     //only for drag
     async blindMoveTo(dragId,newNodeId){
+      const loading = this.$loading({
+        lock: true,
+        text: '文件移动中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
         let {data: res} = await this.$http.post("/file/moveFile",
             {
               user_id: this.$store.state.user_id,
@@ -131,6 +155,7 @@ export default {
               new_nodeId: newNodeId,
             }
         ).catch((error) => {
+          loading.close();
           if(error.status !== 401) {
             this.$message.error('拖拽移动出现未知问题，请联系Van！ Code:' + error.message);
           }}
@@ -138,6 +163,7 @@ export default {
         if (res.code === 200) {
           this.$emit("reload");
           this.$emit("updateTotalBar");
+          loading.close();
           this.$notify(
               {
                 title: '拖动移动文件成功',
@@ -148,6 +174,7 @@ export default {
               }
           );
         }else if(res.code === 404){
+          loading.close();
           this.$notify(
               {
                 title: '拖动移动失败',
@@ -157,6 +184,7 @@ export default {
                 customClass: "message",
               });
         }else if(res.code === 459){
+          loading.close();
           this.$notify(
               {
                 title: '移动失败',
@@ -169,6 +197,12 @@ export default {
 
     },
     async multiBlindMoveTo(dragIds,newNodeId){
+      const loading = this.$loading({
+        lock: true,
+        text: '文件移动中...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
       let {data: res} = await this.$http.post("/file/moveFiles",
           {
             user_id: this.$store.state.user_id,
@@ -177,12 +211,14 @@ export default {
           }
       ).catch((error) => {
         if(error.status !== 401) {
+          loading.close();
           this.$message.error('批量拖拽移动出现未知问题，请联系Van！ Code:' + error.message);
         }}
       );
       if (res.code === 200) {
         this.$emit("reload");
         this.$emit("updateTotalBar");
+        loading.close();
         this.$notify(
             {
               title: '批量拖动移动文件成功',
@@ -193,6 +229,7 @@ export default {
             }
         );
       }else if(res.code === 404){
+        loading.close();
         this.$notify(
             {
               title: '批量拖动移动失败',
@@ -202,6 +239,7 @@ export default {
               customClass: "message",
             });
       }else if(res.code === 459){
+        loading.close();
         this.$notify(
             {
               title: '批量移动失败',

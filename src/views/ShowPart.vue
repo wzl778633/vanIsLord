@@ -31,6 +31,7 @@ export default {
       timeCounter:0,
       sizeCounter:0,
       userCounter:0,
+      loading:null,
       allListFlag : false,
       defaultStyle: {
         className: 'os-theme-thick-light',
@@ -181,6 +182,14 @@ export default {
       }else{
         userId =  this.$store.state.user_id;
       }
+      this.loading = this.$loading({
+        target:".mainShell",
+        lock: true,
+        fullscreen:false,
+        text: '正在加载，请稍后...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
       let {data: res} = await this.$http.post(
           `${this.api}`,
           {
@@ -188,6 +197,7 @@ export default {
             "real_user_id": this.$store.state.user_id,
           },
       ).catch((error) => {
+          this.loading.close();
             if(error.status !== 401) {
               this.$message.error('文件查询出现未知问题，请联系Van！ Code:' + error.message);
             }
@@ -195,6 +205,7 @@ export default {
       if(res.code == 200){
         this.$store.commit("updateFileList",res.data.content);
         this.updateItems();
+        this.loading.close();
         }
 
     },
@@ -217,6 +228,14 @@ export default {
         allListFlag = true;
       }
       let result = [];
+      this.loading = this.$loading({
+        target:".mainShell",
+        lock: true,
+        fullscreen:false,
+        text: '正在加载，请稍后...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
       let {data : res} = await this.$http.post(
           "/share/browsePath",
           {
@@ -224,6 +243,7 @@ export default {
             "content": arr,
           },
       ).catch((error) => {
+        this.loading.close();
         if(error.status !== 401){
           this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
         }
@@ -251,6 +271,7 @@ export default {
         await this.shareRequestOn(result[result.length-1].node_id, result[result.length-1].file_path,allListFlag);
 
       }else if(res.code == 453){
+        this.loading.close();
         this.$router.push("/404error");
       }
 
@@ -280,6 +301,7 @@ export default {
           this.$router.push(this.$store.state.currentPath);
           this.updateItems();
         }
+        this.loading.close();
       }
     },
     async decode(path){
@@ -287,6 +309,14 @@ export default {
       let arr = path.split("/");
       arr = arr.slice(3,arr.length);
       let result = [];
+      this.loading = this.$loading({
+        target:".mainShell",
+        lock: true,
+        fullscreen:false,
+        text: '正在加载，请稍后...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
       let {data : res} = await this.$http.post(
           "/file/browsePath",
           {
@@ -294,6 +324,7 @@ export default {
             "content": arr,
           },
       ).catch((error) => {
+        this.loading.close();
             if(error.status !== 401) {
               this.$message.error('路径查询出现未知问题，请联系Van！ Code:' + error.message);
             }
@@ -307,6 +338,7 @@ export default {
         await this.dirRequestOn(result[result.length-1].node_id, result[result.length-1].file_path);
 
       }else if(res.code == 453){
+        this.loading.close();
         this.$router.push("/404error");
       }
 
@@ -320,6 +352,7 @@ export default {
             "node_id": Number(id),
           },
       ).catch((error) => {
+        this.loading.close();
         if(error.status !== 401) {
           this.$message.error('文件夹查询出现未知问题，请联系Van！ Code:' + error.message);
         }
@@ -333,7 +366,7 @@ export default {
           this.$router.push(this.$store.state.currentPath);
           this.updateItems();
         }
-
+        this.loading.close();
       }
     },
   },

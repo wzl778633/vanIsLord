@@ -45,7 +45,7 @@ const routes = [
       {path : 'shareUser/:path/video:union', component: ShowPart},
       {path : 'shareUser/:path/music:union', component: ShowPart},
       {path : 'shareUser/:path+', component: PiazzaPart},
-      {path : 'clipboard', component: ChatRoom,},
+      {path : 'clipboard', component: ChatRoom,meta: {keepAlive: true, scrollTop: 0,}},
     ],
     meta: {
       isLogin: true
@@ -71,6 +71,10 @@ router.beforeEach((to,from,next) =>{
   if(to.path.includes('/mainpage')){
     const token = localStorage.getItem('loginToken');
     if(token){
+      if (from.meta.keepAlive) { //判断是否为需要保活的路由
+        const scrollTop = document.querySelector('.vac-container-scroll').scrollTop; //获取chatroom页面的scrollTop
+        from.meta.scrollTop = scrollTop || 0;
+      }
       next()
     }else{
       next('/')
