@@ -14,17 +14,35 @@
 
 前后端分离。适合为中小用户群提供自由交换资源/共用流媒体服务器资源整合的平台。
 
-目前网盘系统/文件储存系统/分享/音乐播放器/文件预览已基本开发完成，用户间聊天室/重命名/部署自定义config等其他服务仍在开发中，现版本仅为alpha测试版本且仅支持docker镜像部署。
+目前网盘系统/文件储存系统/分享/音乐播放器/文件预览/用户间聊天室已开发完成，重命名工具/部署自定义config等其他服务仍在开发中，现版本仅为alpha测试版本且仅支持docker镜像部署。
 
 ![image](https://user-images.githubusercontent.com/55415793/173569340-9c1efaa2-3329-4129-a4f0-aa33165f1473.png)
 ![image](https://user-images.githubusercontent.com/55415793/173570282-483bc72d-0d5b-40a7-874b-78e9cf775a20.png)
 
 
-## 现有docker版本 V0.0.9
+## 现有docker版本 V1.5.0 non-published-version
 ```
-wzl778633/vanislord_server:latest //后端服务器
+wzl778633/vanislord_server:1.5.0 //后端服务器
 wzl778633/vanislord_web:latest //web_client服务器
-需要自行获取mongoDB 4.4.0镜像
+```
+需要自行获取mongoDB 4.4.0镜像 并创建对应用户 端口为默认端口27017
+```
+db.createUser(
+     {
+       user:"root",
+       pwd:"xxxxx",
+       roles:[{role:"root",db:"admin"}]
+     }
+  )
+ 
+db.createUser( 
+  { 
+    user: "xxxxx", 
+    pwd: "xxxxx", 
+    roles: [{role:"readWrite",db:"vnetdisk"},
+            {role:"userAdminAnyDatabase",db:"admin"}] 
+  } 
+) 
 ```
 
 
