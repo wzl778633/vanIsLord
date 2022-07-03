@@ -25,7 +25,7 @@ export default {
   },
   methods:{
     reload(name){
-      this.$emit("dirRedirect", name.file_path);
+      //this.$emit("dirRedirect", name.file_path);
     },
   },
   computed: {

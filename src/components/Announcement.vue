@@ -30,7 +30,10 @@
         <span>本系统的开发人员只有两位（Van/YiXing Wu）,且完全从零开始的开发,我们已经尽量保证版本的稳定，但如果遇见任何bug，请立刻联系我</span><br><br>
         <span>但也请你不要破坏性的使用本系统，做出一些正常人不会做的操作</span><br><br><br><br>
 
-        <span><em style="color:red">目前已知的问题有</em>：上传的暂停/中止都必须以9mb为一个界限。http上传链接超过8分钟会被浏览器强制中断（即上传速度在8mins内低于6.4KB/S）。不支持FireFox。资源占用可能较大。某些屏幕过小的设备可能存在页面溢出</span><br><br>
+        <span><em style="color:red">目前已知的问题有：</em></span><br><br>
+        <span><em style="color:red">重要！HEVC 10bit编码格式的视频现不支持在线预览，会在7月初解决。所以请勿多次打开无法在第一次打开时正常播放的视频！！</em></span><br><br>
+        <span><em style="color:red">重要！批量删除可能出现错误，刷新即可暂时解决</em></span><br><br>
+        <span>上传的暂停/中止都必须以9mb为一个界限。http上传链接超过8分钟会被浏览器强制中断（即上传速度在8mins内低于6.4KB/S）。不支持FireFox。资源占用可能较大。某些屏幕过小的设备可能存在页面溢出</span><br><br>
         <span>如果你了解开发/网络安全/部署/测试等并希望提出改进意见或加入开发，本系统已开源公开发布在docker hub与Github（https://github.com/wzl778633/vanIsLord），我们接受任何技术支持</span><br><br>
         <span>或者你有好的画作也可以给我，我可以将其放置在登录页面彰显我们的独特</span><br><br>
         <span>还有，<em style="color:red">请勿请勿请勿</em>四处宣传本系统。以免迎来不必要的麻烦（自己用用得了，硬要说也不合法，对吧）</span><br><br>

@@ -430,18 +430,26 @@ export default {
         cancelButtonText: '算了',
         type: 'warning'
       }).then(async () => {
+        const loading = this.$loading({
+          lock: true,
+          text: '正在删除中，请稍后...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
         let {data: res} = await this.$http.post("/file/deleteFile",
             {
               user_id: this.$store.state.user_id,
               node_id: this.item.node_id,
             }
         ).catch((error) => {
+          loading.close();
           if(error.status !== 401) {
             this.$message.error('删除出现未知问题，请联系Van！ Code:' + error.message);
           }}
         );
 
         if (res.code === 200) {
+          loading.close();
           this.$emit("reload");
           this.updateTotalBar();
           this.$notify(
@@ -455,6 +463,7 @@ export default {
           );
         }
       }).catch(() => {
+        loading.close();
         this.$notify(
             {
               title: '傻逼',
@@ -487,6 +496,7 @@ export default {
           loading.close();
         }
         else{
+          loading.close();
           await this.getOpenHash();
           if(this.onlyOneTranscodeError === true){
             this.$notify({
@@ -497,6 +507,7 @@ export default {
               customClass: "message",
             });
             this.onlyOneTranscodeError = false;
+            return;
           }
           //this.liveSrc = `https://aijiangsb.com:9070/api/vopen/${this.hash}?token=${localStorage.loginToken}`;
           //this.liveSrc = `http://192.168.1.169:9090/vopen/${this.hash}?token=${localStorage.loginToken}&fullfilename=${this.item.file_name}`;
@@ -507,7 +518,7 @@ export default {
             this.liveSrc = `http://172.17.0.1:9090/vopen/${this.hash}?token=${localStorage.loginToken}&fullfilename=${this.item.file_name}`;
           }
 
-          loading.close();
+          //loading.close();
           this.dialogVisible = false;
           this.openDialogVisible = true;
 
@@ -662,6 +673,12 @@ export default {
       }else{
         userId = this.$store.state.user_id;
       }
+      const loading = this.$loading({
+        lock: true,
+        text: '正在获取链接，请稍后...',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
       let{data : res}= await this.$http.get("/file/getOpenMd5",{
         params:{
           user_id:userId,
@@ -669,6 +686,7 @@ export default {
         },
       });
       if(res.code === 200){
+        loading.close()
         this.hash = res.data;
       }
       else if(res.code === 300){
@@ -678,53 +696,66 @@ export default {
         switch (str){
           case 'h264':
             if(this.$store.state.videoFormatCheck.h264){
+              loading.close()
               this.hash = res.data.hash;
               break;
             }else {
+              loading.close()
               await this.transcode();
               break;
             }
           case 'hevc':
             if(this.$store.state.videoFormatCheck.hevc){
+              loading.close()
               this.hash = res.data.hash;
               break;
             }else {
+              loading.close()
               await this.transcode();
               break;
             }
           case 'vp9':
             if(this.$store.state.videoFormatCheck.vp9){
+              loading.close()
               this.hash = res.data.hash;
               break;
             }else {
+              loading.close()
               await this.transcode();
               break;
             }
           case 'vp8':
             if(this.$store.state.videoFormatCheck.vp8){
+              loading.close()
               this.hash = res.data.hash;
               break;
             }else {
+              loading.close()
               await this.transcode();
               break;
             }
           case 'theora':
             if(this.$store.state.videoFormatCheck.ogg){
+              loading.close()
               this.hash = res.data.hash;
               break;
             }else {
+              loading.close()
               await this.transcode();
               break;
             }
           case 'mpeg4':
             if(this.$store.state.videoFormatCheck.mpeg4){
+              loading.close()
               this.hash = res.data.hash;
               break;
             }else {
+              loading.close()
               await this.transcode();
               break;
             }
           default:
+            loading.close()
             await this.transcode();
         }
 

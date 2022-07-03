@@ -279,9 +279,11 @@ export default {
   },
   watch:{
     monitor:{
-      handler(){
-        this.$store.commit("updatePath",this.$route.fullPath);
-        this.decode(decodeURIComponent(this.$store.state.currentPath));
+      handler(val){
+        if(val !== this.$store.state.currentPath){
+          this.$store.commit("updatePath",this.$route.fullPath);
+          this.decode(decodeURIComponent(this.$store.state.currentPath));
+        }
       }
     },
   },

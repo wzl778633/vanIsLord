@@ -325,16 +325,24 @@ export default {
             cancelButtonText: '算了',
             type: 'warning'
           }).then(async () => {
+            const loading = this.$loading({
+              lock: true,
+              text: '正在删除中，请稍后...',
+              spinner: 'el-icon-loading',
+              background: 'rgba(0, 0, 0, 0.7)'
+            });
             let {data: res} = await this.$http.post("/file/deleteFiles", {
               file_list: this.selectedItem,
               user_id: this.$store.state.user_id,
             }).catch((error) => {
+              loading.close();
               this.$store.commit("updateIsAllDeleteOn", false);
               if (error.status !== 401) {
                 this.$message.error('批量删除出现未知问题，请联系Van！ Code:' + error.message);
               }
             });
               if (res.code === 200) {
+                loading.close();
                 this.$emit("reload");
                 this.updateTotalBar();
                 this.$notify(
@@ -349,6 +357,7 @@ export default {
                 this.$store.commit("updateIsAllDeleteOn", false);
               }
           }).catch(() => {
+            loading.close();
             this.$store.commit("updateIsAllDeleteOn", false);
             this.$notify(
                 {
