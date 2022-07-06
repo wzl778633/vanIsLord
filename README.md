@@ -18,8 +18,12 @@
 
 ![image](https://user-images.githubusercontent.com/55415793/173569340-9c1efaa2-3329-4129-a4f0-aa33165f1473.png)
 ![image](https://user-images.githubusercontent.com/55415793/173570282-483bc72d-0d5b-40a7-874b-78e9cf775a20.png)
-
-
+## demo 地址
+https://nighttown.aijiangsb.com
+```
+user: test
+pwd: WWww123456,./
+```
 ## 现有docker版本 V1.5.0 non-published-version
 ```
 wzl778633/vanislord_server:1.5.0 //后端服务器
