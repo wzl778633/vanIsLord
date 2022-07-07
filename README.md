@@ -19,7 +19,7 @@
 ![image](https://user-images.githubusercontent.com/55415793/173569340-9c1efaa2-3329-4129-a4f0-aa33165f1473.png)
 ![image](https://user-images.githubusercontent.com/55415793/173570282-483bc72d-0d5b-40a7-874b-78e9cf775a20.png)
 ## demo 地址
-nighttown.aijiangsb.com
+nighttown.aijiangsb.com or https://aijiangsb.com:9070
 ```
 user: test
 pwd: WWww123456,./
