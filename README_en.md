@@ -98,11 +98,6 @@ For Special Demo only. So plz DO NOT submit any files.
 ```
 
 ## Contributing
-
-Feel free to dive in! [Open an issue](https://github.com/RichardLitt/standard-readme/issues/new) or submit PRs.
-
-Standard Readme follows the [Contributor Covenant](http://contributor-covenant.org/version/1/3/0/) Code of Conduct.
-
 ### Contributors
 
 Currently 2 main contributors are working for this project. 
