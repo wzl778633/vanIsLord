@@ -18,9 +18,9 @@ Back-End server is based on Java Springboot & MongoDB 4.4.0.
 
 ## Table of Contents
 
-- [What this project can do?](#What this project can do?)
-- [How To Install?](#How To Install?)
-- [How to use this system?](#How to use this system?)
+- [What this project can do?](#Whatthisprojectcando?)
+- [How To Install?](#HowToInstall?)
+- [How to use this system?](#Howtousethissystem?)
 - [Demo](#demo)
 - [Contributing](#contributing)
 - [License](#license)
