@@ -3,7 +3,8 @@
 # VanIsLord: NightTown Online Cloud System/夜镇系统
 
 
-[点我切换至英文版本]（https://github.com/wzl778633/vanIsLord/blob/master/README_en.md）
+[切换至英文版本](https://github.com/wzl778633/vanIsLord/blob/master/README_en.md)
+
 这是一个基于Vue2.0·Java Springboot·MongoDB开发的在线资源分享与管理系统。具有：
 - **较为完备的线上网盘**(支持大文件，复数文件传输，暂不支持文件夹上传，支持各类批量操作以及拖动等文件管理功能)。
 - **基于md5的文件储存系统**，当大量用户拥有相同文件时可节省大量空间，用户间分享不额外消耗硬盘空间（但暂未开放秒传功能）。
