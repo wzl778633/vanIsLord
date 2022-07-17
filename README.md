@@ -2,6 +2,7 @@
 
 # VanIsLord: NightTown 夜镇系统
 
+[中文文档](https://github.com/wzl778633/vanIsLord/blob/master/README_cn.md)
 A Self-hosted Cloud Storage & File Sharing Platform, best to serve for a medium-sized (under 1000) user groups.
 
 Example scenarios for this project usage are: a group of your friends/multiple families/median-size working groups and so on.
