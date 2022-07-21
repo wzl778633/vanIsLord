@@ -40,7 +40,7 @@ The main features for this repository are:
 3. 🎥 **Online preview**. Natively support images/videos/music/pdf/txt files' preview based on client browser. **Unsupported video encode format will be transcode to H.264 with ffmpeg in Back-End with Hardware Acceleration based on Intal Quick Sync (QSV)**. But you CAN have more files preview support powered by [kkFileView](https://github.com/kekingcn/kkFileView). We will use this third-party project to provide support for doc/docx/xlsx/rar files preview and so on.
 4. 🎼 A **Native Web Music Player** with a unique UI interface which will show Main-info & Cover from songs. it can also store user's playlist and sync-update it with all clients that this user login.
 5. 🌃 A **Piazza**. "a town for sharing", you can find all the files that other user sharing in this place. Get to your own cloud!
-6. 📋 A **Clipboard**. if you want anything from other users, name it! This **complete-chat-system** can help you to communicate with any user in your user pool!
+6. 📋 A **Clipboard**. if you want anything from other users, name it! This **complete chat system power by vue-advanced-chat** can help you to communicate with any user in your user pool!
 7. 🛠**Tools** _(still in development)_. Provide many useful tools for advance file opreation. Such as a helper tool for file renaming with TMDB API, so you can send your movies/anime to your Media System such as Jellyfin currently and quickly without searching the right names and seasons info on TMDB and rename each files by yourself!
 8. **And maybe More in the future!**
 
