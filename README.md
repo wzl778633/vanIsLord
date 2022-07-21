@@ -106,7 +106,7 @@ For Special Demo only. So plz DO NOT submit any files.
 
 Currently 2 main contributors are working for this project. 
 <a href="https://github.com/wzl778633/vanIsLord/graphs/contributors">
-Tom "Van" Wang & YiXing "Star_xyz" Wu
+Tom "Van" Wang & YiXing "Star-xyz" Wu
 </a>
 
 We will welcome any contribution for this project! 
