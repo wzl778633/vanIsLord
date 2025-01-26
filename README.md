@@ -1,6 +1,6 @@
-![testIcon](https://user-images.githubusercontent.com/55415793/173568881-43b09052-592d-412d-b3c2-e4e7c310cb4e.png)
+![newIcon](https://github.com/user-attachments/assets/81b9cd97-8cb8-4359-9377-fea3c9eec572)
 
-# VanIsLord: NightTown 夜镇系统
+# Valiya: NightTown 夜镇系统
 
 [中文文档](https://github.com/wzl778633/vanIsLord/blob/master/README_cn.md)
 
