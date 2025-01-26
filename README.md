@@ -92,7 +92,7 @@ After pulling completed and the containers for both Back-End and Front-End clien
 
 ## Demo
 
-nighttown.aijiangsb.com or https://aijiangsb.com:9070
+nighttown.vanislord.com or https://vanislord.com:9070
 
 ```
 user: test
