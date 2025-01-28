@@ -1,4 +1,4 @@
-![newIcon](https://github.com/user-attachments/assets/81b9cd97-8cb8-4359-9377-fea3c9eec572)
+![newIcon](https://github.com/user-attachments/assets/8a42cb46-4804-41d1-871e-3ec8eccf810f)
 
 # Valiya: NightTown 夜镇系统
 
